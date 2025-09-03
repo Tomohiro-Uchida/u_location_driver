@@ -9,7 +9,7 @@ import android.content.Context
 import android.content.Intent
 import com.jimdo.uchida001tmhr.stepcounter.MyAlarmManager
 
-class ExectAlarmStateChangeReceiver : BroadcastReceiver() {
+class AlarmStateChangeReceiver : BroadcastReceiver() {
 
   override fun onReceive(context: Context, intent: Intent) {
     println("ExectAlarmStateChangeReceiver: onReceive()")

@@ -57,6 +57,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
   companion object {
     @SuppressLint("StaticFieldLeak")
     lateinit var thisContext: Context
+
     @SuppressLint("StaticFieldLeak")
     lateinit var thisActivity: Activity
     val fromDartChannelName = "com.jimdo.uchida001tmhr.u_location_driver/fromDart"
@@ -264,7 +265,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     println("ULocationDriverPlugin: onMethodCall() -> ${call.method}")
     when (call.method) {
       "activate" -> {
-        println("BackgroundLocationService: activate")
+        println("ULocationDriverPlugin: activate")
         if (activityState == activityBackground) {
           activityState = temporaryExecuteInBackground
         } else {
@@ -282,7 +283,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
       }
 
       "inactivate" -> {
-        println("BackgroundLocationService: inactivate")
+        println("ULocationDriverPlugin: inactivate")
         activityState = activityStopped
         stopLocationUpdates()
         val myAlarmManager = MyAlarmManager(thisContext)
