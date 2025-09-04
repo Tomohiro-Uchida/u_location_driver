@@ -32,12 +32,12 @@ android {
     buildToolsVersion '36.0.0'
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_21
+        jvmTarget = JavaVersion.VERSION_17
     }
 
     sourceSets {
@@ -47,6 +47,15 @@ android {
 
     defaultConfig {
         minSdk = 33
+    }
+
+    buildTypes {
+        release {
+            // Enables code-related app optimization.
+            minifyEnabled false
+            // Enables resource shrinking.
+            shrinkResources false
+        }
     }
 
     testOptions {
