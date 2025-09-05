@@ -1,13 +1,10 @@
 package com.jimdo.uchida001tmhr.u_location_driver
 
-import android.app.Activity
 import android.app.AlarmManager
 import android.app.AlarmManager.ACTION_SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED
-import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import com.jimdo.uchida001tmhr.stepcounter.MyAlarmManager
 
 class AlarmStateChangeReceiver : BroadcastReceiver() {
 
@@ -18,7 +15,7 @@ class AlarmStateChangeReceiver : BroadcastReceiver() {
       if (alarmRegister.canScheduleExactAlarms()) {
         val uLocationDriverPlugin = ULocationDriverPlugin()
         uLocationDriverPlugin.defineRequestPermissions()
-        uLocationDriverPlugin.getNotficationPermission()
+        uLocationDriverPlugin.getNotificationPermission()
       }
     }
   }
