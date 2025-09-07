@@ -91,6 +91,10 @@ public class ULocationDriverPlugin: NSObject, FlutterPlugin, CLLocationManagerDe
 
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
     switch call.method {
+    case "initialize1":
+      result("ACK")
+    case "initialize2":
+      result("ACK")
     case "activate":
       debugPrint("ULocationDriverPlugin() -> handle() -> activate")
       switch (locationMonitoringStatus) {

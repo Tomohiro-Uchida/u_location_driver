@@ -135,10 +135,17 @@ class _MyAppState extends State<MyApp> {
               ),
               TextButton(
                 onPressed: (() {
-                  uLocationDriverPlugin.initialize();
-                  debugPrint("Dart: initialize");
+                  uLocationDriverPlugin.initialize1();
+                  debugPrint("Dart: initialize1");
                 }),
-                child: Text("Initialize"),
+                child: Text("Initialize1"),
+              ),
+              TextButton(
+                onPressed: (() {
+                  uLocationDriverPlugin.initialize2();
+                  debugPrint("Dart: initialize2");
+                }),
+                child: Text("Initialize2"),
               ),
               TextButton(
                 onPressed: (() {
