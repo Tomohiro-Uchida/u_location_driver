@@ -1,5 +1,6 @@
 package com.jimdo.uchida001tmhr.u_location_driver
 
+import android.Manifest
 import android.Manifest.permission.ACCESS_BACKGROUND_LOCATION
 import android.Manifest.permission.ACCESS_COARSE_LOCATION
 import android.Manifest.permission.ACCESS_FINE_LOCATION
@@ -179,6 +180,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
 
     requestPermissionLauncherBackgroundLocation =
       (thisActivity as ComponentActivity).registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+        /*
         if (isGranted) {
           println("ULocationDriverPlugin: onAttachedToActivity() : activityState = $activityState")
           when (activityState) {
@@ -202,7 +204,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
                 val wakeLock: PowerManager.WakeLock =
                   (thisContext.getSystemService(Context.POWER_SERVICE) as PowerManager).run {
                     newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "ULocationDriverPlugin::WakelockTag").apply {
-                      acquire(30*1000L /* 30 seconds*/)
+                      acquire(30 * 1000L /* 30 seconds*/)
                     }
                   }
                 val result = getCurrentLocation()
@@ -220,7 +222,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
                 val wakeLock: PowerManager.WakeLock =
                   (thisContext.getSystemService(Context.POWER_SERVICE) as PowerManager).run {
                     newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "ULocationDriverPlugin::WakelockTag").apply {
-                      acquire(30*1000L /* 30 seconds*/)
+                      acquire(30 * 1000L /* 30 seconds*/)
                     }
                   }
                 val result = getCurrentLocation()
@@ -235,6 +237,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
             }
           }
         }
+         */
       }
   }
 
@@ -304,17 +307,12 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
     super.onPause(owner)
   }
 
+  @RequiresPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
   override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
     println("ULocationDriverPlugin: onMethodCall() -> ${call.method}")
     when (call.method) {
-      "activate" -> {
-        println("ULocationDriverPlugin: activate")
-        ProcessLifecycleOwner.get().lifecycle.addObserver(this)
-        activityState = if (activityState == ACTIVITY_BACKGROUND) {
-          TEMPORALLY_EXECUTE_IN_BACKGROUND
-        } else {
-          ACTIVITY_FOREGROUND
-        }
+      "initialize" -> {
+        println("ULocationDriverPlugin: initialize")
         val alarmManager = thisContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         if (!alarmManager.canScheduleExactAlarms()) {
           val intent = Intent(ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
@@ -323,6 +321,18 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
         } else {
           getNotificationPermission()
         }
+        result.success("success")
+      }
+
+      "activate" -> {
+        println("ULocationDriverPlugin: activate")
+        ProcessLifecycleOwner.get().lifecycle.addObserver(this)
+        activityState = if (activityState == ACTIVITY_BACKGROUND) {
+          TEMPORALLY_EXECUTE_IN_BACKGROUND
+        } else {
+          ACTIVITY_FOREGROUND
+        }
+        startRetrieveLocation();
         result.success("success")
       }
 
@@ -364,53 +374,55 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
   fun getLocationPermissionBackground() {
     val permissionBackgroundLocation =
       ContextCompat.checkSelfPermission(thisContext, ACCESS_BACKGROUND_LOCATION)
-    if (permissionBackgroundLocation == PackageManager.PERMISSION_GRANTED) {
-      println("ULocationDriverPlugin: getLocationPermissionBackground(): activityState = $activityState")
-      when (activityState) {
-        ACTIVITY_FOREGROUND -> {
-          requestDeviceLocation()
-          println("ULocationDriverPlugin: requestDeviceLocation()")
-        }
+    if (permissionBackgroundLocation != PackageManager.PERMISSION_GRANTED) {
+      requestPermissionLauncherBackgroundLocation.launch(ACCESS_BACKGROUND_LOCATION)
+    }
+  }
 
-        ACTIVITY_BACKGROUND -> {
-          CoroutineScope(Dispatchers.Main).launch {
-            val wakeLock: PowerManager.WakeLock =
-              (thisContext.getSystemService(Context.POWER_SERVICE) as PowerManager).run {
-                newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "ULocationDriverPlugin::WakelockTag").apply {
-                  acquire(30*1000L /* 30 seconds*/)
-                }
-              }
-            val result = getCurrentLocation()
-            if (result.isSuccess) {
-              println("ULocationDriverPlugin: getCurrentLocation() -> Success")
-            } else {
-              println("ULocationDriverPlugin: getCurrentLocation() -> Failure")
-            }
-            wakeLock.release()
-          }
-        }
+  @RequiresPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
+  fun startRetrieveLocation() {
+    when (activityState) {
+      ACTIVITY_FOREGROUND -> {
+        requestDeviceLocation()
+        println("ULocationDriverPlugin: requestDeviceLocation()")
+      }
 
-        TEMPORALLY_EXECUTE_IN_BACKGROUND -> {
-          CoroutineScope(Dispatchers.IO).launch {
-            val wakeLock: PowerManager.WakeLock =
-              (thisContext.getSystemService(Context.POWER_SERVICE) as PowerManager).run {
-                newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "ULocationDriverPlugin::WakelockTag").apply {
-                  acquire(30*1000L /* 30 seconds*/)
-                }
+      ACTIVITY_BACKGROUND -> {
+        CoroutineScope(Dispatchers.Main).launch {
+          val wakeLock: PowerManager.WakeLock =
+            (thisContext.getSystemService(Context.POWER_SERVICE) as PowerManager).run {
+              newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "ULocationDriverPlugin::WakelockTag").apply {
+                acquire(30 * 1000L /* 30 seconds*/)
               }
-            val result = getCurrentLocation()
-            if (result.isSuccess) {
-              println("ULocationDriverPlugin: getCurrentLocation() -> Success")
-            } else {
-              println("ULocationDriverPlugin: getCurrentLocation() -> Failure")
             }
-            activityState = ACTIVITY_BACKGROUND
-            wakeLock.release()
+          val result = getCurrentLocation()
+          if (result.isSuccess) {
+            println("ULocationDriverPlugin: getCurrentLocation() -> Success")
+          } else {
+            println("ULocationDriverPlugin: getCurrentLocation() -> Failure")
           }
+          wakeLock.release()
         }
       }
-    } else {
-      requestPermissionLauncherBackgroundLocation.launch(ACCESS_BACKGROUND_LOCATION)
+
+      TEMPORALLY_EXECUTE_IN_BACKGROUND -> {
+        CoroutineScope(Dispatchers.IO).launch {
+          val wakeLock: PowerManager.WakeLock =
+            (thisContext.getSystemService(Context.POWER_SERVICE) as PowerManager).run {
+              newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "ULocationDriverPlugin::WakelockTag").apply {
+                acquire(30 * 1000L /* 30 seconds*/)
+              }
+            }
+          val result = getCurrentLocation()
+          if (result.isSuccess) {
+            println("ULocationDriverPlugin: getCurrentLocation() -> Success")
+          } else {
+            println("ULocationDriverPlugin: getCurrentLocation() -> Failure")
+          }
+          activityState = ACTIVITY_BACKGROUND
+          wakeLock.release()
+        }
+      }
     }
   }
 
@@ -466,7 +478,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
       val wakeLock: PowerManager.WakeLock =
         (context.getSystemService(Context.POWER_SERVICE) as PowerManager).run {
           newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "ULocationDriverPlugin::WakelockTag").apply {
-            acquire(30*1000L /* 30 seconds*/)
+            acquire(30 * 1000L /* 30 seconds*/)
           }
         }
       if (fusedLocationClients.isEmpty()) {

@@ -11,14 +11,6 @@
     <application>
 
         <receiver android:name=".AlarmReceiver"/>
-        <receiver android:name=".AlarmStateChangeReceiver"
-            android:enabled="true"
-            android:exported="false" >
-            <intent-filter>
-                <action android:name="android.intent.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED"/>
-            </intent-filter>
-
-        </receiver>
 
     </application>
 
