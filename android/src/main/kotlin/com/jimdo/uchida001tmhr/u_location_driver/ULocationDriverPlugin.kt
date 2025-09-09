@@ -110,7 +110,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
         if (location != null && toDartChannel != null) {
           val locale = Locale.JAPAN
           val dateTimeFormatter =
-            DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM).withLocale(locale)
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withLocale(locale)
           val dateString = dateTimeFormatter.format(LocalDateTime.now())
           val message = "$dateString,${location?.latitude},${location?.longitude}"
           toDartChannel?.invokeMethod("location", message, object : MethodChannel.Result {
