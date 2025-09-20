@@ -180,64 +180,6 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
 
     requestPermissionLauncherBackgroundLocation =
       (thisActivity as ComponentActivity).registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-        /*
-        if (isGranted) {
-          println("ULocationDriverPlugin: onAttachedToActivity() : activityState = $activityState")
-          when (activityState) {
-            ACTIVITY_FOREGROUND -> {
-              val permissionCheckCoarseLocation = ContextCompat.checkSelfPermission(
-                thisContext,
-                ACCESS_COARSE_LOCATION
-              ) == PackageManager.PERMISSION_GRANTED
-              val permissionCheckFineLocation = ContextCompat.checkSelfPermission(
-                thisContext,
-                ACCESS_FINE_LOCATION
-              ) == PackageManager.PERMISSION_GRANTED
-              if (permissionCheckCoarseLocation && permissionCheckFineLocation) {
-                requestDeviceLocation()
-              }
-              println("ULocationDriverPlugin: requestDeviceLocation()")
-            }
-
-            ACTIVITY_BACKGROUND -> {
-              CoroutineScope(Dispatchers.Main).launch {
-                val wakeLock: PowerManager.WakeLock =
-                  (thisContext.getSystemService(Context.POWER_SERVICE) as PowerManager).run {
-                    newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "ULocationDriverPlugin::WakelockTag").apply {
-                      acquire(30 * 1000L /* 30 seconds*/)
-                    }
-                  }
-                val result = getCurrentLocation()
-                if (result.isSuccess) {
-                  println("ULocationDriverPlugin: getCurrentLocation() -> Success")
-                } else {
-                  println("ULocationDriverPlugin: getCurrentLocation() -> Failure")
-                }
-                wakeLock.release()
-              }
-            }
-
-            TEMPORALLY_EXECUTE_IN_BACKGROUND -> {
-              CoroutineScope(Dispatchers.Main).launch {
-                val wakeLock: PowerManager.WakeLock =
-                  (thisContext.getSystemService(Context.POWER_SERVICE) as PowerManager).run {
-                    newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "ULocationDriverPlugin::WakelockTag").apply {
-                      acquire(30 * 1000L /* 30 seconds*/)
-                    }
-                  }
-                val result = getCurrentLocation()
-                if (result.isSuccess) {
-                  println("ULocationDriverPlugin: getCurrentLocation() -> Success")
-                } else {
-                  println("ULocationDriverPlugin: getCurrentLocation() -> Failure")
-                }
-                activityState = ACTIVITY_BACKGROUND
-                wakeLock.release()
-              }
-            }
-          }
-        }
-         */
       }
   }
 
@@ -340,8 +282,8 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
         result.success("success")
       }
 
-      "inactivate" -> {
-        println("ULocationDriverPlugin: inactivate")
+      "deactivate" -> {
+        println("ULocationDriverPlugin: deactivate")
         ProcessLifecycleOwner.get().lifecycle.removeObserver(this)
         activityState = ACTIVITY_STOPPED
         stopLocationUpdates()

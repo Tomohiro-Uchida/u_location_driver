@@ -119,8 +119,8 @@ public class ULocationDriverPlugin: NSObject, FlutterPlugin, CLLocationManagerDe
         break
       }
       result("ACK")
-    case "inactivate":
-      debugPrint("ULocationDriverPlugin() -> handle() -> inactivate")
+    case "deactivate":
+      debugPrint("ULocationDriverPlugin() -> handle() -> deactivate")
       locationMonitoringStatus = stopped
       stateMachine()
       result("ACK")

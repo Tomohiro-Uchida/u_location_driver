@@ -15,8 +15,8 @@ class ULocationDriver {
     return ULocationDriverPlatform.instance.activate();
   }
 
-  Future<String?> inactivate() {
-    return ULocationDriverPlatform.instance.inactivate();
+  Future<String?> deactivate() {
+    return ULocationDriverPlatform.instance.deactivate();
   }
 
 }

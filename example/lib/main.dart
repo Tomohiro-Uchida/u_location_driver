@@ -156,10 +156,10 @@ class _MyAppState extends State<MyApp> {
               ),
               TextButton(
                 onPressed: (() {
-                  uLocationDriverPlugin.inactivate();
-                  debugPrint("Dart: inactivate");
+                  uLocationDriverPlugin.deactivate();
+                  debugPrint("Dart: deactivate");
                 }),
-                child: Text("Inactivate"),
+                child: Text("Deactivate"),
               ),
               Text(key: UniqueKey(), messageFromNative), // <- UniqueKey() must be used,
             ],
