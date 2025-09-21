@@ -8,6 +8,24 @@ import 'package:u_location_driver_example/send_to_host.dart';
 import 'package:u_location_driver_example/write_to_file.dart';
 
 @pragma('vm:entry-point')
+Future<void> uLocationBackgroundHandler() async {
+  debugPrint("Dart: uLocationBackgroundHandler() -> Set Method Channel");
+  MethodChannel toDartChannel = MethodChannel("com.jimdo.uchida001tmhr.u_location_driver/toDart");
+  debugPrint("Dart: uLocationBackgroundHandler() -> setMethodCallHandler()");
+  toDartChannel.setMethodCallHandler((call) {
+    switch (call.method) {
+      case "location":
+        WriteToFile writeToFile = WriteToFile();
+        writeToFile.write(call.arguments);
+        SendToHost sendToHost = SendToHost();
+        sendToHost.send(call.arguments);
+        return Future.value("ACK");
+      default:
+        return Future.value("NAK");
+    }
+  });
+}
+
 Future<void> main() async {
   // The name must be main().
   debugPrint("Dart: main()");

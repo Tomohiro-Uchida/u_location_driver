@@ -38,6 +38,7 @@ import io.flutter.embedding.engine.dart.DartExecutor
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
+import io.flutter.FlutterInjector
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
@@ -51,6 +52,15 @@ import java.time.format.FormatStyle
 import java.util.Locale
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
+
+object FlutterEngineHolder {
+  var flutterEngine: FlutterEngine? = null
+
+  fun destroy() {
+    flutterEngine?.destroy()
+    flutterEngine = null
+  }
+}
 
 class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, DefaultLifecycleObserver {
   private lateinit var requestPermissionLauncherPostNotification: ActivityResultLauncher<String>
@@ -95,11 +105,21 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
     fun loadFlutterEngine(context: Context): FlutterEngine? {
       val processInfo = getProcessInfo(context)
       if (processInfo?.importance != ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND) {
-        println("ULocationDriverPlugin: loadFlutterEngine()")
-        val flutterEngine = FlutterEngine(context)
-        val dartEntrypoint = DartExecutor.DartEntrypoint.createDefault()
-        flutterEngine.dartExecutor.executeDartEntrypoint(dartEntrypoint)
-        return flutterEngine
+        if (FlutterEngineHolder.flutterEngine == null) {
+          println("ULocationDriverPlugin: loadFlutterEngine()")
+          FlutterInjector.instance().flutterLoader().startInitialization(context)
+          FlutterInjector.instance().flutterLoader().ensureInitializationComplete(context, null)
+          val flutterEngine = FlutterEngine(context)
+          // val dartEntrypoint = DartExecutor.DartEntrypoint.createDefault()
+          val appBundlePath: String = FlutterInjector.instance().flutterLoader().findAppBundlePath()
+          val customEntrypointName = "uLocationBackgroundHandler";
+          val dartEntrypoint = DartExecutor.DartEntrypoint(appBundlePath, customEntrypointName)
+          flutterEngine.dartExecutor.executeDartEntrypoint(dartEntrypoint)
+          FlutterEngineHolder.flutterEngine = flutterEngine
+          return flutterEngine
+        } else {
+          return FlutterEngineHolder.flutterEngine
+        }
       }
       return null
     }
@@ -211,15 +231,6 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
 
   override fun onDetachedFromActivity() {
     println("ULocationDriverPlugin: onDetachedFromActivity()")
-    /*
-    if (activityState != ACTIVITY_STOPPED) {
-      activityState = ACTIVITY_BACKGROUND
-      stopLocationUpdates()
-      val myAlarmManager = MyAlarmManager(thisContext)
-      myAlarmManager.cancelAlarm()
-      myAlarmManager.registerAlarm()
-    }
-     */
   }
 
   override fun onDetachedFromActivityForConfigChanges() {
@@ -390,7 +401,6 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
       startLocationUpdates()
     }
   }
-
 
   @RequiresPermission(allOf = [ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION])
   fun startLocationUpdates() {

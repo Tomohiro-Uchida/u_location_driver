@@ -25,8 +25,8 @@ public class ULocationDriverPlugin: NSObject, FlutterPlugin, CLLocationManagerDe
 
   var backgroundLocation: CLLocation?
   
-  static var callbackHandler: String = ""
-  static var flutterEngineGroup: FlutterEngineGroup!
+  // static var callbackHandler: String = ""
+  // static var flutterEngineGroup: FlutterEngineGroup!
 
   private override init() {
     super.init()
