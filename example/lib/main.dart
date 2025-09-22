@@ -1,3 +1,6 @@
+import 'dart:ffi';
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'dart:async';
 
@@ -9,21 +12,28 @@ import 'package:u_location_driver_example/write_to_file.dart';
 
 @pragma('vm:entry-point')
 Future<void> uLocationBackgroundHandler() async {
-  debugPrint("Dart: uLocationBackgroundHandler() -> Set Method Channel");
-  MethodChannel toDartChannel = MethodChannel("com.jimdo.uchida001tmhr.u_location_driver/toDart");
-  debugPrint("Dart: uLocationBackgroundHandler() -> setMethodCallHandler()");
-  toDartChannel.setMethodCallHandler((call) {
-    switch (call.method) {
-      case "location":
-        WriteToFile writeToFile = WriteToFile();
-        writeToFile.write(call.arguments);
-        SendToHost sendToHost = SendToHost();
-        sendToHost.send(call.arguments);
-        return Future.value("ACK");
-      default:
-        return Future.value("NAK");
-    }
-  });
+  print("Dart isolate started");
+  debugPrint("Dart: Start uLocationBackgroundHandler()");
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    debugPrint("Dart: uLocationBackgroundHandler() -> Set Method Channel");
+    MethodChannel toDartChannel = MethodChannel("com.jimdo.uchida001tmhr.u_location_driver/toDart");
+    debugPrint("Dart: uLocationBackgroundHandler() -> setMethodCallHandler()");
+    toDartChannel.setMethodCallHandler((call) {
+      switch (call.method) {
+        case "location":
+          WriteToFile writeToFile = WriteToFile();
+          writeToFile.write(call.arguments);
+          SendToHost sendToHost = SendToHost();
+          sendToHost.send(call.arguments);
+          return Future.value("ACK");
+        default:
+          return Future.value("NAK");
+      }
+    });
+  } catch (e, st) {
+    debugPrint("Dart: uLocationBackgroundHandler exception: $e\n$st");
+  }
 }
 
 Future<void> main() async {
@@ -167,8 +177,12 @@ class _MyAppState extends State<MyApp> {
               ),
               TextButton(
                 onPressed: (() {
-                  uLocationDriverPlugin.activate();
-                  debugPrint("Dart: activate");
+                  final callbackHandle = PluginUtilities.getCallbackHandle(uLocationBackgroundHandler);
+                  if (callbackHandle != null) {
+                    final handle = callbackHandle.toRawHandle();
+                    uLocationDriverPlugin.activate(handle);
+                    debugPrint("Dart: activate");
+                  }
                 }),
                 child: Text("Activate"),
               ),

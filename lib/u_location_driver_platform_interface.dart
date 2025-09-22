@@ -1,3 +1,6 @@
+import 'dart:ffi';
+import 'dart:ui';
+
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 import 'u_location_driver_method_channel.dart';
@@ -31,7 +34,7 @@ abstract class ULocationDriverPlatform extends PlatformInterface {
     throw UnimplementedError('initialize2() has not been implemented.');
   }
 
-  Future<String?> activate() async {
+  Future<String?> activate(int callbackHandle) async {
     throw UnimplementedError('activate() has not been implemented.');
   }
 

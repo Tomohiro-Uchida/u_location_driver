@@ -50,6 +50,12 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Enables code-related app optimization.
+            minifyEnabled false
+            // Enables resource shrinking.
+            shrinkResources false
+        }
         release {
             // Enables code-related app optimization.
             minifyEnabled false

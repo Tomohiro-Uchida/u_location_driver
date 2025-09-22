@@ -1,3 +1,6 @@
+import 'dart:ffi';
+import 'dart:ui';
+
 import 'package:flutter/services.dart';
 import 'u_location_driver_platform_interface.dart';
 
@@ -16,8 +19,9 @@ class MethodChannelULocationDriver extends ULocationDriverPlatform {
   }
 
   @override
-  Future<String?> activate() async {
-    return await methodChannel.invokeMethod<String>("activate");
+  Future<String?> activate(int callbackHandle) async {
+    Map<String, int> args = {"callbackHandle": callbackHandle};
+    return await methodChannel.invokeMethod<String>("activate", args);
   }
 
   @override
