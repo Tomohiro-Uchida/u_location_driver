@@ -86,7 +86,6 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
       setPriority(Priority.PRIORITY_BALANCED_POWER_ACCURACY)
     }.build()
 
-
     fun loadFlutterEngine(context: Context): FlutterEngine? {
       if (FlutterEngineHolder.flutterEngine == null) {
         val prefs = context.applicationContext.getSharedPreferences("defaultPreferences", Context.MODE_PRIVATE)
