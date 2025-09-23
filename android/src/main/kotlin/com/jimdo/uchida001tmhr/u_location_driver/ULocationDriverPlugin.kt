@@ -43,9 +43,7 @@ import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -407,18 +405,20 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
   }
 
   fun getLocationInBackground(context: Context) {
-    GlobalScope.launch(Dispatchers.Main) {
+    runBlocking {
       if (fusedLocationClients.isEmpty()) {
         fusedLocationClients.add(LocationServices.getFusedLocationProviderClient(context))
       }
-      backgroundFlutterEngine = loadFlutterEngine(context)
-      if (backgroundFlutterEngine != null) {
-        toDartChannel = MethodChannel(
-          backgroundFlutterEngine!!.dartExecutor.binaryMessenger,
-          TO_DART_CHANNEL_NAME
-        )
-        println("ULocationDriverPlugin: fusedLocationClients = $fusedLocationClients")
-        getCurrentLocation()
+      withContext(Dispatchers.Main) {
+        backgroundFlutterEngine = loadFlutterEngine(context)
+        if (backgroundFlutterEngine != null) {
+          toDartChannel = MethodChannel(
+            backgroundFlutterEngine!!.dartExecutor.binaryMessenger,
+            TO_DART_CHANNEL_NAME
+          )
+          println("ULocationDriverPlugin: fusedLocationClients = $fusedLocationClients")
+          getCurrentLocation()
+        }
       }
     }
   }
