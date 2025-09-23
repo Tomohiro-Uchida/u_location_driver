@@ -1,6 +1,4 @@
 
-import 'dart:ffi';
-import 'dart:ui';
 
 import 'u_location_driver_platform_interface.dart';
 

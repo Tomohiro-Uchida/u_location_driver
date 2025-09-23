@@ -1,10 +1,9 @@
-package com.jimdo.uchida001tmhr.stepcounter
+package com.jimdo.uchida001tmhr.u_location_driver
 
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import com.jimdo.uchida001tmhr.u_location_driver.AlarmReceiver
 import java.util.*
 
 

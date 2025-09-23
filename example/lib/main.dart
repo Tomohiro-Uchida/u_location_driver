@@ -1,4 +1,3 @@
-import 'dart:ffi';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -12,7 +11,6 @@ import 'package:u_location_driver_example/write_to_file.dart';
 
 @pragma('vm:entry-point')
 Future<void> uLocationBackgroundHandler() async {
-  print("Dart isolate started");
   debugPrint("Dart: Start uLocationBackgroundHandler()");
   WidgetsFlutterBinding.ensureInitialized();
   try {
