@@ -1,5 +1,4 @@
 
-
 import 'u_location_driver_platform_interface.dart';
 
 class ULocationDriver {
@@ -12,8 +11,8 @@ class ULocationDriver {
     return ULocationDriverPlatform.instance.initialize2();
   }
 
-  Future<String?> activate(int callbackHunlde) {
-    return ULocationDriverPlatform.instance.activate(callbackHunlde);
+  Future<String?> activate({int callbackHunlde = 0}) {
+    return ULocationDriverPlatform.instance.activate(callbackHandle: callbackHunlde);
   }
 
   Future<String?> deactivate() {

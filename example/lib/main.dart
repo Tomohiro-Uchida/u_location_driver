@@ -178,7 +178,7 @@ class _MyAppState extends State<MyApp> {
                   final callbackHandle = PluginUtilities.getCallbackHandle(uLocationBackgroundHandler);
                   if (callbackHandle != null) {
                     final handle = callbackHandle.toRawHandle();
-                    uLocationDriverPlugin.activate(handle);
+                    uLocationDriverPlugin.activate(callbackHunlde: handle);
                     debugPrint("Dart: activate");
                   }
                 }),

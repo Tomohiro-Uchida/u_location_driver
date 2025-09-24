@@ -17,9 +17,13 @@ class MethodChannelULocationDriver extends ULocationDriverPlatform {
   }
 
   @override
-  Future<String?> activate(int callbackHandle) async {
-    Map<String, int> args = {"callbackHandle": callbackHandle};
-    return await methodChannel.invokeMethod<String>("activate", args);
+  Future<String?> activate({int callbackHandle=0}) async {
+    if (callbackHandle == 0) {
+      return await methodChannel.invokeMethod<String>("activate");
+    } else {
+      Map<String, int> args = {"callbackHandle": callbackHandle};
+      return await methodChannel.invokeMethod<String>("activate", args);
+    }
   }
 
   @override

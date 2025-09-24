@@ -32,7 +32,7 @@ abstract class ULocationDriverPlatform extends PlatformInterface {
     throw UnimplementedError('initialize2() has not been implemented.');
   }
 
-  Future<String?> activate(int callbackHandle) async {
+  Future<String?> activate({int callbackHandle = 0}) async {
     throw UnimplementedError('activate() has not been implemented.');
   }
 
