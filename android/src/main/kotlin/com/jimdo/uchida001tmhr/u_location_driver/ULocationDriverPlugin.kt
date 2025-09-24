@@ -284,8 +284,8 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
 
       "activate" -> {
         println("ULocationDriverPlugin: activate")
-        val args = call.arguments as Map<String, Any>
-        if (!args.isEmpty()) {
+        if (call.arguments != null) {
+          val args = call.arguments as Map<String, Any>
           val prefs = thisContext.applicationContext.getSharedPreferences("defaultPreferences", Context.MODE_PRIVATE)
           val editor = prefs.edit()
           editor.putLong("callbackHandle", args["callbackHandle"] as Long)
