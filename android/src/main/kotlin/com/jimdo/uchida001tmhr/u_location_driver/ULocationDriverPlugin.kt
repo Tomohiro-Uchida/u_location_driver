@@ -87,38 +87,45 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
     }.build()
 
     fun loadFlutterEngine(context: Context): FlutterEngine? {
+      println("ULocationDriverPlugin: loadFlutterEngin #1")
       if (FlutterEngineHolder.flutterEngine == null) {
+        println("ULocationDriverPlugin: loadFlutterEngin #2")
         val prefs = context.applicationContext.getSharedPreferences("defaultPreferences", Context.MODE_PRIVATE)
         val callbackHandle = prefs.getLong("callbackHandle", 0L)
         println("loadFlutterEngine: callbackHandle = ${callbackHandle}")
         if (callbackHandle == 0L) {
+          println("ULocationDriverPlugin: loadFlutterEngin #3")
           return null
         }
+        println("ULocationDriverPlugin: loadFlutterEngin #4")
         val flutterLoader = FlutterLoader()
         if (!flutterLoader.initialized()) {
+          println("ULocationDriverPlugin: loadFlutterEngin #5")
           flutterLoader.startInitialization(context)
           flutterLoader.ensureInitializationComplete(context, null)
         }
-
+        println("ULocationDriverPlugin: loadFlutterEngin #6")
         val callbackInfo = FlutterCallbackInformation.lookupCallbackInformation(callbackHandle)
         println("loadFlutterEngine: callbackInfo = ${callbackInfo}")
         if (callbackInfo == null) {
+          println("ULocationDriverPlugin: loadFlutterEngin #7")
           return null;
         }
-
+        println("ULocationDriverPlugin: loadFlutterEngin #8")
         val args = DartExecutor.DartCallback(
           context.getAssets(),
           flutterLoader.findAppBundlePath(),
           callbackInfo
         )
-
+        println("ULocationDriverPlugin: loadFlutterEngin #9")
         val flutterEngine = FlutterEngine(context.applicationContext)
         flutterEngine.getDartExecutor().executeDartCallback(args)
-
         FlutterEngineHolder.flutterEngine = flutterEngine
         return flutterEngine
+      } else {
+        println("ULocationDriverPlugin: loadFlutterEngin #10")
+        return FlutterEngineHolder.flutterEngine
       }
-      return null
     }
 
     fun informLocationToDart(location: Location?) {
@@ -404,13 +411,20 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
   }
 
   fun getLocationInBackground(context: Context) {
+    println("ULocationDriverPlugin: getLocationInBackground #1")
     runBlocking {
       if (fusedLocationClients.isEmpty()) {
+        println("ULocationDriverPlugin: getLocationInBackground #2")
         fusedLocationClients.add(LocationServices.getFusedLocationProviderClient(context))
+        println("ULocationDriverPlugin: getLocationInBackground #3")
       }
+      println("ULocationDriverPlugin: getLocationInBackground #4")
       withContext(Dispatchers.Main) {
+        println("ULocationDriverPlugin: getLocationInBackground #5")
         backgroundFlutterEngine = loadFlutterEngine(context)
+        println("ULocationDriverPlugin: getLocationInBackground #6")
         if (backgroundFlutterEngine != null) {
+          println("ULocationDriverPlugin: getLocationInBackground #7")
           toDartChannel = MethodChannel(
             backgroundFlutterEngine!!.dartExecutor.binaryMessenger,
             TO_DART_CHANNEL_NAME
