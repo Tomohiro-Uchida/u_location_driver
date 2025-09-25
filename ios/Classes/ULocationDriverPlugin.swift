@@ -103,8 +103,8 @@ public class ULocationDriverPlugin: NSObject, FlutterPlugin, CLLocationManagerDe
       debugPrint("ULocationDriverPlugin() -> handle() -> activate: locationMonitoringStatus = \(locationMonitoringStatus)")
       switch (locationMonitoringStatus) {
       case stopped:
-        locationMonitoringStatus = activeForeground
         debugPrint("ULocationDriverPlugin() -> handle() -> activate -> stopped")
+        locationMonitoringStatus = activeForeground
         stateMachine(startLocationUpdate: true)
         break;
       case activeForeground:

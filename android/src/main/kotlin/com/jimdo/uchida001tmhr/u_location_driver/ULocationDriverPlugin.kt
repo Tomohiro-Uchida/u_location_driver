@@ -429,6 +429,9 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
             backgroundFlutterEngine!!.dartExecutor.binaryMessenger,
             TO_DART_CHANNEL_NAME
           )
+          if (fusedLocationClients.isEmpty()) {
+            fusedLocationClients.add(LocationServices.getFusedLocationProviderClient(context))
+          }
           println("ULocationDriverPlugin: fusedLocationClients = $fusedLocationClients")
           getCurrentLocation()
         }
