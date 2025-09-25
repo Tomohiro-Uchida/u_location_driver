@@ -100,7 +100,7 @@ public class ULocationDriverPlugin: NSObject, FlutterPlugin, CLLocationManagerDe
       stateMachine(startLocationUpdate: true)
       result("ACK")
     case "activate":
-      debugPrint("ULocationDriverPlugin() -> handle() -> activate")
+      debugPrint("ULocationDriverPlugin() -> handle() -> activate: locationMonitoringStatus = \(locationMonitoringStatus)")
       switch (locationMonitoringStatus) {
       case stopped:
         locationMonitoringStatus = activeForeground
@@ -168,7 +168,7 @@ public class ULocationDriverPlugin: NSObject, FlutterPlugin, CLLocationManagerDe
       debugPrint("ULocationDriverPlugin() -> .denied")
       break
     case .authorizedAlways:
-      debugPrint("ULocationDriverPlugin() -> .authorizedAlways")
+      debugPrint("ULocationDriverPlugin() -> .authorizedAlways: locationMonitoringStatus = \(locationMonitoringStatus)")
       switch (locationMonitoringStatus) {
       case stopped:
         debugPrint("ULocationDriverPlugin() -> .authorizedAlways -> stopped")
