@@ -47,6 +47,7 @@ import kotlinx.coroutines.*
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import javax.naming.Context
 
 object FlutterEngineHolder {
   var flutterEngine: FlutterEngine? = null
@@ -158,7 +159,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
       }
     }
 
-    fun getCurrentLocation() {
+    fun getCurrentLocation(context: Context) {
       if (fusedLocationClients.isEmpty()) {
         fusedLocationClients.add(LocationServices.getFusedLocationProviderClient(context))
       }
@@ -359,11 +360,11 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
       }
 
       ACTIVITY_BACKGROUND -> {
-        getCurrentLocation()
+        getCurrentLocation(thisContext)
       }
 
       TEMPORALLY_EXECUTE_IN_BACKGROUND -> {
-        getCurrentLocation()
+        getCurrentLocation(thisContext)
         activityState = ACTIVITY_BACKGROUND
       }
     }
@@ -433,7 +434,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
             TO_DART_CHANNEL_NAME
           )
           println("ULocationDriverPlugin: fusedLocationClients = $fusedLocationClients")
-          getCurrentLocation()
+          getCurrentLocation(context)
         }
       }
     }

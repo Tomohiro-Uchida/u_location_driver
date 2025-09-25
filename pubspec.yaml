@@ -1,6 +1,6 @@
 name: u_location_driver
 description: "Location Driver"
-version: 0.0.19+19
+version: 0.0.20+20
 homepage:
 
 environment:
