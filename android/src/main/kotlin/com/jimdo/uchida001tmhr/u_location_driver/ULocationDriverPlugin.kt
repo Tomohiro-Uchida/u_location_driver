@@ -159,6 +159,9 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
     }
 
     fun getCurrentLocation() {
+      if (fusedLocationClients.isEmpty()) {
+        fusedLocationClients.add(LocationServices.getFusedLocationProviderClient(context))
+      }
       println("ULocationDriverPlugin: getCurrentLocation() : fusedLocationClients = $fusedLocationClients")
       val permissionCheckCoarseLocation = ContextCompat.checkSelfPermission(
         thisContext,
@@ -429,9 +432,6 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
             backgroundFlutterEngine!!.dartExecutor.binaryMessenger,
             TO_DART_CHANNEL_NAME
           )
-          if (fusedLocationClients.isEmpty()) {
-            fusedLocationClients.add(LocationServices.getFusedLocationProviderClient(context))
-          }
           println("ULocationDriverPlugin: fusedLocationClients = $fusedLocationClients")
           getCurrentLocation()
         }
