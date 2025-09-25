@@ -136,7 +136,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
         val dateString = dateTimeFormatter.format(LocalDateTime.now())
         val message = "$dateString,${location?.latitude},${location?.longitude}"
         Handler(Looper.getMainLooper()).postDelayed({
-          println("ULocationDriverPlugin: invokeMethod(location)")
+          println("ULocationDriverPlugin: invokeMethod(location) : toDartChannel = $toDartChannel")
           toDartChannel?.invokeMethod("location", message, object : MethodChannel.Result {
             override fun success(result: Any?) {
               println("informLocationToDart: result = $result")
