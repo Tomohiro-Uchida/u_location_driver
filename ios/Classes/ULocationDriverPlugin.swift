@@ -104,17 +104,23 @@ public class ULocationDriverPlugin: NSObject, FlutterPlugin, CLLocationManagerDe
       switch (locationMonitoringStatus) {
       case stopped:
         locationMonitoringStatus = activeForeground
+        debugPrint("ULocationDriverPlugin() -> handle() -> activate -> stopped")
         stateMachine(startLocationUpdate: true)
         break;
       case activeForeground:
+        debugPrint("ULocationDriverPlugin() -> handle() -> activate -> activeForeground")
         stateMachine(startLocationUpdate: true)
         break
       case activeBackground:
+        debugPrint("ULocationDriverPlugin() -> handle() -> activate -> activeBackground")
         locationMonitoringStatus = temporaryExecuteInBackground
         stateMachine(startLocationUpdate: true)
+        break
       case activeTerminated:
+        debugPrint("ULocationDriverPlugin() -> handle() -> activate -> activeTerminated")
         locationMonitoringStatus = temporaryExecuteInTerminated
         stateMachine(startLocationUpdate: true)
+        break
       default:
         break
       }
@@ -149,21 +155,28 @@ public class ULocationDriverPlugin: NSObject, FlutterPlugin, CLLocationManagerDe
   }
  
   func stateMachine(startLocationUpdate: Bool = false) {
+    debugPrint("ULocationDriverPlugin() -> stateMachine()")
     switch (clLocationManager.authorizationStatus) {
     case .notDetermined:
+      debugPrint("ULocationDriverPlugin() -> .notDetermined")
       clLocationManager.requestWhenInUseAuthorization()
       break
     case .restricted:
+      debugPrint("ULocationDriverPlugin() -> .restricted")
       break
     case .denied:
+      debugPrint("ULocationDriverPlugin() -> .denied")
       break
     case .authorizedAlways:
+      debugPrint("ULocationDriverPlugin() -> .authorizedAlways")
       switch (locationMonitoringStatus) {
       case stopped:
+        debugPrint("ULocationDriverPlugin() -> .authorizedAlways -> stopped")
         clLocationManager.stopUpdatingLocation()
         clLocationManager.stopMonitoringSignificantLocationChanges()
         break;
       case activeForeground, activeBackground, activeTerminated, temporaryExecuteInBackground, temporaryExecuteInTerminated:
+        debugPrint("ULocationDriverPlugin() -> .authorizedAlways -> actiforeground etc")
         locationMonitoring()
         break
       default:
@@ -171,6 +184,7 @@ public class ULocationDriverPlugin: NSObject, FlutterPlugin, CLLocationManagerDe
       }
       break
     case .authorizedWhenInUse:
+      debugPrint("ULocationDriverPlugin() -> .authorizedWhenInUse")
       clLocationManager.requestAlwaysAuthorization()
       break
     @unknown default:
@@ -184,12 +198,15 @@ public class ULocationDriverPlugin: NSObject, FlutterPlugin, CLLocationManagerDe
   }
   
   public func locationMonitoring() {
+    debugPrint("ULocationDriverPlugin() -> locationMonitoring()")
     switch (locationMonitoringStatus) {
     case stopped:
+      debugPrint("ULocationDriverPlugin() -> locationMonitoring() -> stopped")
       clLocationManager.stopUpdatingLocation()
       clLocationManager.stopMonitoringSignificantLocationChanges()
       break
     case activeForeground, temporaryExecuteInBackground, temporaryExecuteInTerminated:
+      debugPrint("ULocationDriverPlugin() -> locationMonitoring() -> activeForegroud etc")
       clLocationManager.delegate = self
       // clLocationManager.distanceFilter = kCLDistanceFilterNone
       clLocationManager.distanceFilter  = 10.0
@@ -200,6 +217,7 @@ public class ULocationDriverPlugin: NSObject, FlutterPlugin, CLLocationManagerDe
       debugPrint("ULocationDriverPlugin() -> startUpdatingLocation in activeForeground/temporaryForegroundFromBackground")
       break
     case activeBackground, activeTerminated:
+      debugPrint("ULocationDriverPlugin() -> locationMonitoring() -> activeBackground etc")
       clLocationManager.delegate = self
       clLocationManager.allowsBackgroundLocationUpdates = true
       clLocationManager.pausesLocationUpdatesAutomatically = false
