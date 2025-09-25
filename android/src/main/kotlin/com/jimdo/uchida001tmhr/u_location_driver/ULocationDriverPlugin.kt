@@ -15,7 +15,6 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Looper
 import android.os.Handler
-import android.os.PowerManager
 import android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
@@ -47,7 +46,6 @@ import kotlinx.coroutines.*
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import javax.naming.Context
 
 object FlutterEngineHolder {
   var flutterEngine: FlutterEngine? = null
@@ -373,11 +371,11 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
   @RequiresPermission(ACCESS_COARSE_LOCATION)
   fun requestDeviceLocation(context: Context) {
     val permissionFineLocation = ContextCompat.checkSelfPermission(
-      thisContext.applicationContext,
+      context.applicationContext,
       ACCESS_FINE_LOCATION
     )
     val permissionBackgroundLocation = ContextCompat.checkSelfPermission(
-      thisContext.applicationContext,
+      context.applicationContext,
       ACCESS_BACKGROUND_LOCATION
     )
     if (permissionFineLocation == PackageManager.PERMISSION_GRANTED &&
