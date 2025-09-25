@@ -129,6 +129,10 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
 
     fun informLocationToDart(location: Location?) {
       println("ULocationDriverPlugin: informLocationToDart() : Start")
+      toDartChannel = MethodChannel(
+        backgroundFlutterEngine!!.dartExecutor.binaryMessenger,
+        TO_DART_CHANNEL_NAME
+      )
       if (location != null && toDartChannel != null) {
         val locale = Locale.JAPAN
         val dateTimeFormatter =
