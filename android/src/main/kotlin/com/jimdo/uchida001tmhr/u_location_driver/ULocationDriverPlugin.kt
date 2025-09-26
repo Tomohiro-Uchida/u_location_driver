@@ -81,9 +81,6 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
     const val ACTIVITY_BACKGROUND = 2
     const val TEMPORALLY_EXECUTE_IN_BACKGROUND = 3
     var activityState = ACTIVITY_STOPPED
-    val currentLocationRequestBuilder = CurrentLocationRequest.Builder().apply {
-      setPriority(Priority.PRIORITY_BALANCED_POWER_ACCURACY)
-    }.build()
 
     fun loadFlutterEngine(context: Context): FlutterEngine? {
       println("ULocationDriverPlugin: loadFlutterEngin #1")
@@ -170,6 +167,9 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
       ) == PackageManager.PERMISSION_GRANTED
       if (permissionCheckCoarseLocation && permissionCheckFineLocation) {
         fusedLocationClients.forEach { it ->
+          val currentLocationRequestBuilder = CurrentLocationRequest.Builder().apply {
+            setPriority(Priority.PRIORITY_BALANCED_POWER_ACCURACY)
+          }.build()
           it.getCurrentLocation(currentLocationRequestBuilder, null)
             .addOnSuccessListener { it ->
               println("ULocationDriverPlugin: getCurrentLocation() -> OnSuccessListener ")
