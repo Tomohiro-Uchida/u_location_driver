@@ -161,11 +161,11 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
       }
       println("ULocationDriverPlugin: getCurrentLocation() : fusedLocationClients = $fusedLocationClients")
       val permissionCheckCoarseLocation = ContextCompat.checkSelfPermission(
-        context,
+        context.applicationContext,
         ACCESS_COARSE_LOCATION
       ) == PackageManager.PERMISSION_GRANTED
       val permissionCheckFineLocation = ContextCompat.checkSelfPermission(
-        context,
+        context.applicationContext,
         ACCESS_FINE_LOCATION
       ) == PackageManager.PERMISSION_GRANTED
       if (permissionCheckCoarseLocation && permissionCheckFineLocation) {
