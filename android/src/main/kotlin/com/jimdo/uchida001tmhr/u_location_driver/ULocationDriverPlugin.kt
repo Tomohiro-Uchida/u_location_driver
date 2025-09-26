@@ -117,9 +117,10 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
         val flutterEngine = FlutterEngine(context.applicationContext)
         flutterEngine.getDartExecutor().executeDartCallback(args)
         FlutterEngineHolder.flutterEngine = flutterEngine
+        println("ULocationDriverPlugin#loadFlutterEngin() #10 flutterEngine=$flutterEngine")
         return flutterEngine
       } else {
-        println("ULocationDriverPlugin: loadFlutterEngin #10")
+        println("ULocationDriverPlugin: loadFlutterEngin #11")
         return FlutterEngineHolder.flutterEngine
       }
     }
@@ -186,6 +187,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
               }
             }
             .addOnFailureListener { it ->
+              println("ULocationDriverPlugin: getCurrentLocation() -> addOnFailureListener ")
             }
         }
       }
