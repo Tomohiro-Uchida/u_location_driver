@@ -155,7 +155,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
       }
     }
 
-    fun getCurrentLocation(context: Context, loadFlutterEngine: Boolean) {
+    fun getCurrentLocation(context: Context) {
       if (fusedLocationClients.isEmpty()) {
         fusedLocationClients.add(LocationServices.getFusedLocationProviderClient(context))
       }
@@ -173,19 +173,15 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
           it.getCurrentLocation(currentLocationRequestBuilder, null)
             .addOnSuccessListener { it ->
               println("ULocationDriverPlugin: getCurrentLocation() -> OnSuccessListener ")
-              if (loadFlutterEngine) {
-                backgroundFlutterEngine = loadFlutterEngine(context)
-                if (backgroundFlutterEngine != null) {
-                  toDartChannel = MethodChannel(
-                    backgroundFlutterEngine!!.dartExecutor.binaryMessenger,
-                    TO_DART_CHANNEL_NAME
-                  )
-                  Handler(Looper.getMainLooper()).postDelayed({
-                    informLocationToDart(it)
-                  }, 1000)
-                }
-              } else {
-                informLocationToDart(it)
+              backgroundFlutterEngine = loadFlutterEngine(context)
+              if (backgroundFlutterEngine != null) {
+                toDartChannel = MethodChannel(
+                  backgroundFlutterEngine!!.dartExecutor.binaryMessenger,
+                  TO_DART_CHANNEL_NAME
+                )
+                Handler(Looper.getMainLooper()).postDelayed({
+                  informLocationToDart(it)
+                }, 1000)
               }
             }
             .addOnFailureListener { it ->
@@ -369,12 +365,12 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
 
       ACTIVITY_BACKGROUND -> {
         println("ULocationDriverPlugin: startRetrieveLocationund #1")
-        getCurrentLocation(thisContext, true)
+        getCurrentLocation(thisContext)
       }
 
       TEMPORALLY_EXECUTE_IN_BACKGROUND -> {
         println("ULocationDriverPlugin: startRetrieveLocationund #2")
-        getCurrentLocation(thisContext, true)
+        getCurrentLocation(thisContext)
         activityState = ACTIVITY_BACKGROUND
       }
     }
@@ -435,7 +431,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
       println("ULocationDriverPlugin: getLocationInBackground #4")
       withContext(Dispatchers.Main) {
         println("ULocationDriverPlugin: getLocationInBackground #5")
-        getCurrentLocation(context, true)
+        getCurrentLocation(context)
       }
     }
   }
