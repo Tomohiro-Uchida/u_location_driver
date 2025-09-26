@@ -135,7 +135,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
           DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withLocale(locale)
         val dateString = dateTimeFormatter.format(LocalDateTime.now())
         val message = "$dateString,${location?.latitude},${location?.longitude}"
-        println("ULocationDriverPlugin: invokeMethod(location) : toDartChannel = $toDartChannel")
+        println("ULocationDriverPlugin#invokeMethod(location) toDartChannel = $toDartChannel")
         toDartChannel?.invokeMethod("location", message, object : MethodChannel.Result {
           override fun success(result: Any?) {
             println("informLocationToDart: result = $result")
@@ -179,6 +179,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
                   backgroundFlutterEngine!!.dartExecutor.binaryMessenger,
                   TO_DART_CHANNEL_NAME
                 )
+                println("ULocationDriverPlugin#getCurrentLocation()#OnSuccessListener toDartChannel=$toDartChannel")
                 Handler(Looper.getMainLooper()).postDelayed({
                   informLocationToDart(it)
                 }, 1000)
@@ -221,6 +222,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
       binaryMessengerToDart!!,
       TO_DART_CHANNEL_NAME
     )
+    println("ULocationDriverPlugin#onAttachedToEngine toDartChannel=$toDartChannel")
     FlutterEngineHolder.destroy()
   }
 
