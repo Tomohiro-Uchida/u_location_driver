@@ -220,10 +220,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
     fromDartChannel?.setMethodCallHandler(this)
     thisContext = flutterPluginBinding.applicationContext
     binaryMessengerToDart = flutterPluginBinding.binaryMessenger
-    toDartChannel = MethodChannel(
-      binaryMessengerToDart!!,
-      TO_DART_CHANNEL_NAME
-    )
+    toDartChannel = MethodChannel(binaryMessengerToDart!!, TO_DART_CHANNEL_NAME)
     println("ULocationDriverPlugin#onAttachedToEngine toDartChannel=$toDartChannel")
     FlutterEngineHolder.destroy()
   }
