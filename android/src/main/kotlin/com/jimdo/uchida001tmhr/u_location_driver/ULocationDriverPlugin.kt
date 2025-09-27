@@ -83,44 +83,44 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
     var activityState = ACTIVITY_STOPPED
 
     fun loadFlutterEngine(context: Context): FlutterEngine? {
-      println("ULocationDriverPlugin: loadFlutterEngin #1")
+      println("ULocationDriverPlugin#loadFlutterEngine() #1")
       if (FlutterEngineHolder.flutterEngine == null) {
-        println("ULocationDriverPlugin: loadFlutterEngin #2")
+        println("ULocationDriverPlugin#loadFlutterEngine() #2")
         val prefs = context.applicationContext.getSharedPreferences("defaultPreferences", Context.MODE_PRIVATE)
         val callbackHandle = prefs.getLong("callbackHandle", 0L)
         println("loadFlutterEngine: callbackHandle = $callbackHandle")
         if (callbackHandle == 0L) {
-          println("ULocationDriverPlugin: loadFlutterEngin #3")
+          println("ULocationDriverPlugin#loadFlutterEngine() #3")
           return null
         }
-        println("ULocationDriverPlugin: loadFlutterEngin #4")
+        println("ULocationDriverPlugin#loadFlutterEngine() #4")
         val flutterLoader = FlutterLoader()
         if (!flutterLoader.initialized()) {
-          println("ULocationDriverPlugin: loadFlutterEngin #5")
+          println("ULocationDriverPlugin#loadFlutterEngine() #5")
           flutterLoader.startInitialization(context)
           flutterLoader.ensureInitializationComplete(context, null)
         }
-        println("ULocationDriverPlugin: loadFlutterEngin #6")
+        println("ULocationDriverPlugin#loadFlutterEngine() #6")
         val callbackInfo = FlutterCallbackInformation.lookupCallbackInformation(callbackHandle)
         println("loadFlutterEngine: callbackInfo = ${callbackInfo}")
         if (callbackInfo == null) {
-          println("ULocationDriverPlugin: loadFlutterEngin #7")
+          println("ULocationDriverPlugin#loadFlutterEngine() #7")
           return null;
         }
-        println("ULocationDriverPlugin: loadFlutterEngin #8")
+        println("ULocationDriverPlugin#loadFlutterEngie()n #8")
         val args = DartExecutor.DartCallback(
           context.getAssets(),
           flutterLoader.findAppBundlePath(),
           callbackInfo
         )
-        println("ULocationDriverPlugin: loadFlutterEngin #9")
+        println("ULocationDriverPlugin#loadFlutterEngine() #9")
         val flutterEngine = FlutterEngine(context.applicationContext)
         flutterEngine.getDartExecutor().executeDartCallback(args)
         FlutterEngineHolder.flutterEngine = flutterEngine
         println("ULocationDriverPlugin#loadFlutterEngin() #10 flutterEngine=$flutterEngine")
         return flutterEngine
       } else {
-        println("ULocationDriverPlugin: loadFlutterEngin #11")
+        println("ULocationDriverPlugin#loadFlutterEngine() #11")
         return FlutterEngineHolder.flutterEngine
       }
     }
@@ -195,7 +195,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
   }
 
   fun defineRequestPermissions() {
-    println("ULocationDriverPlugin: defineRequestPermissions()")
+    println("ULocationDriverPlugin#defineRequestPermissions()")
     requestPermissionLauncherPostNotification =
       (thisActivity as ComponentActivity).registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
         if (isGranted) {
@@ -226,7 +226,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
   }
 
   override fun onAttachedToActivity(binding: ActivityPluginBinding) {
-    println("ULocationDriverPlugin: onAttachedToActivity()")
+    println("ULocationDriverPlugin#onAttachedToActivity()")
 
     // activityState = ACTIVITY_FOREGROUND
     myPackageName = binding.activity.intent.component?.packageName
@@ -236,23 +236,23 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
   }
 
   override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
-    println("ULocationDriverPlugin: onDetachedFromEngine()")
+    println("ULocationDriverPlugin#onDetachedFromEngine()")
   }
 
   override fun onDetachedFromActivity() {
-    println("ULocationDriverPlugin: onDetachedFromActivity()")
+    println("ULocationDriverPlugin#onDetachedFromActivity()")
   }
 
   override fun onDetachedFromActivityForConfigChanges() {
-    println("ULocationDriverPlugin: onDetachedFromActivityForConfigChanges()")
+    println("ULocationDriverPlugin#onDetachedFromActivityForConfigChanges()")
   }
 
   override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
-    println("ULocationDriverPlugin: onReattachedToActivityForConfigChanges()")
+    println("ULocationDriverPlugin#onReattachedToActivityForConfigChanges()")
   }
 
   override fun onResume(owner: LifecycleOwner) {
-    println("ULocationDriverPlugin: onResume()")
+    println("ULocationDriverPlugin#onResume()")
     super.onResume(owner)
     activityState = ACTIVITY_FOREGROUND
     val myAlarmManager = MyAlarmManager(thisContext)
@@ -260,7 +260,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
   }
 
   override fun onPause(owner: LifecycleOwner) {
-    println("ULocationDriverPlugin: onPause()")
+    println("ULocationDriverPlugin#onPause()")
     if (activityState != ACTIVITY_STOPPED) {
       activityState = ACTIVITY_BACKGROUND
       stopLocationUpdates()
@@ -273,10 +273,10 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
 
   @RequiresPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
   override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
-    println("ULocationDriverPlugin: onMethodCall() -> ${call.method}")
+    println("ULocationDriverPlugin#onMethodCall() -> ${call.method}")
     when (call.method) {
       "initialize1" -> {
-        println("ULocationDriverPlugin: initialize1")
+        println("ULocationDriverPlugin#initialize1")
         val alarmManager = thisContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         if (!alarmManager.canScheduleExactAlarms()) {
           val intent = Intent(ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
@@ -287,13 +287,13 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
       }
 
       "initialize2" -> {
-        println("ULocationDriverPlugin: initialize2")
+        println("ULocationDriverPlugin#initialize2")
         getNotificationPermission()
         result.success("success")
       }
 
       "activate" -> {
-        println("ULocationDriverPlugin: activate")
+        println("ULocationDriverPlugin#activate")
         if (call.arguments != null) {
           val args = call.arguments as Map<String, Any>
           val prefs = thisContext.applicationContext.getSharedPreferences("defaultPreferences", Context.MODE_PRIVATE)
@@ -312,7 +312,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
       }
 
       "deactivate" -> {
-        println("ULocationDriverPlugin: deactivate")
+        println("ULocationDriverPlugin#deactivate")
         ProcessLifecycleOwner.get().lifecycle.removeObserver(this)
         activityState = ACTIVITY_STOPPED
         stopLocationUpdates()
@@ -362,16 +362,16 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
     when (activityState) {
       ACTIVITY_FOREGROUND -> {
         requestDeviceLocation(context)
-        println("ULocationDriverPlugin: requestDeviceLocation()")
+        println("ULocationDriverPlugin#requestDeviceLocation()")
       }
 
       ACTIVITY_BACKGROUND -> {
-        println("ULocationDriverPlugin: startRetrieveLocationund #1")
+        println("ULocationDriverPlugin#startRetrieveLocationund #1")
         getCurrentLocation(thisContext)
       }
 
       TEMPORALLY_EXECUTE_IN_BACKGROUND -> {
-        println("ULocationDriverPlugin: startRetrieveLocationund #2")
+        println("ULocationDriverPlugin#startRetrieveLocationund #2")
         getCurrentLocation(thisContext)
         activityState = ACTIVITY_BACKGROUND
       }
@@ -417,22 +417,22 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
 
   val locationCallback: LocationCallback = object : LocationCallback() {
     override fun onLocationResult(locationResult: LocationResult) {
-      println("ULocationDriverPlugin: onLocationResult()")
+      println("ULocationDriverPlugin#onLocationResult()")
       informLocationToDart(locationResult.lastLocation!!)
     }
   }
 
   fun getLocationInBackground(context: Context) {
-    println("ULocationDriverPlugin: getLocationInBackground #1")
+    println("ULocationDriverPlugin#getLocationInBackground #1")
     runBlocking {
       if (fusedLocationClients.isEmpty()) {
-        println("ULocationDriverPlugin: getLocationInBackground #2")
+        println("ULocationDriverPlugin#getLocationInBackground #2")
         fusedLocationClients.add(LocationServices.getFusedLocationProviderClient(context))
-        println("ULocationDriverPlugin: getLocationInBackground #3")
+        println("ULocationDriverPlugin#getLocationInBackground #3")
       }
-      println("ULocationDriverPlugin: getLocationInBackground #4")
+      println("ULocationDriverPlugin#getLocationInBackground #4")
       withContext(Dispatchers.Main) {
-        println("ULocationDriverPlugin: getLocationInBackground #5")
+        println("ULocationDriverPlugin#getLocationInBackground #5")
         getCurrentLocation(context)
       }
     }
