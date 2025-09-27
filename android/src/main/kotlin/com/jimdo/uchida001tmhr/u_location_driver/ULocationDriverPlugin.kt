@@ -126,7 +126,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
     }
 
     fun informLocationToDart(location: Location?) {
-      println("ULocationDriverPlugin: informLocationToDart() : Start")
+      println("ULocationDriverPlugin#informLocationToDart() Start")
       if (location != null && toDartChannel != null) {
         val locale = Locale.JAPAN
         val dateTimeFormatter =
@@ -157,7 +157,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
       if (fusedLocationClients.isEmpty()) {
         fusedLocationClients.add(LocationServices.getFusedLocationProviderClient(context))
       }
-      println("ULocationDriverPlugin: getCurrentLocation() : fusedLocationClients = $fusedLocationClients")
+      println("ULocationDriverPlugin#getCurrentLocation() fusedLocationClients = $fusedLocationClients")
       val permissionCheckCoarseLocation = ContextCompat.checkSelfPermission(
         context.applicationContext,
         ACCESS_COARSE_LOCATION
@@ -173,7 +173,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
           }.build()
           it.getCurrentLocation(currentLocationRequestBuilder, null)
             .addOnSuccessListener { it ->
-              println("ULocationDriverPlugin: getCurrentLocation() -> OnSuccessListener ")
+              println("ULocationDriverPlugin#getCurrentLocation()#OnSuccessListener() ")
               backgroundFlutterEngine = loadFlutterEngine(context)
               if (backgroundFlutterEngine != null) {
                 toDartChannel = MethodChannel(
@@ -187,7 +187,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
               }
             }
             .addOnFailureListener { it ->
-              println("ULocationDriverPlugin: getCurrentLocation() -> addOnFailureListener ")
+              println("ULocationDriverPlugin#getCurrentLocation()#addOnFailureListener()")
             }
         }
       }
