@@ -11,8 +11,8 @@ class ULocationDriver {
     return ULocationDriverPlatform.instance.initialize2();
   }
 
-  Future<String?> activate({int callbackHunlde = 0}) {
-    return ULocationDriverPlatform.instance.activate(callbackHandle: callbackHunlde);
+  Future<String?> activate({int callbackHanlde = 0}) {
+    return ULocationDriverPlatform.instance.activate(callbackHandle: callbackHanlde);
   }
 
   Future<String?> deactivate() {
