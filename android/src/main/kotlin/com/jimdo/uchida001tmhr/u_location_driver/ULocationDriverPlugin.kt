@@ -174,7 +174,9 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
           it.getCurrentLocation(currentLocationRequestBuilder, null)
             .addOnSuccessListener { it ->
               println("ULocationDriverPlugin#getCurrentLocation()#OnSuccessListener() ")
-              backgroundFlutterEngine = loadFlutterEngine(context)
+              if (activityState == ACTIVITY_BACKGROUND || activityState == TEMPORALLY_EXECUTE_IN_BACKGROUND) {
+                backgroundFlutterEngine = loadFlutterEngine(context.applicationContext)
+              }
               if (backgroundFlutterEngine != null) {
                 toDartChannel = MethodChannel(
                   backgroundFlutterEngine!!.dartExecutor.binaryMessenger,
@@ -277,11 +279,11 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
     when (call.method) {
       "initialize1" -> {
         println("ULocationDriverPlugin#initialize1")
-        val alarmManager = thisContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val alarmManager = thisContext.applicationContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         if (!alarmManager.canScheduleExactAlarms()) {
           val intent = Intent(ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
           intent.setFlags(FLAG_ACTIVITY_NEW_TASK)
-          thisContext.startActivity(intent)
+          thisContext.applicationContext.startActivity(intent)
         }
         result.success("success")
       }
@@ -307,7 +309,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
         } else {
           ACTIVITY_FOREGROUND
         }
-        startRetrieveLocation(thisContext);
+        startRetrieveLocation(thisContext.applicationContext);
         result.success("success")
       }
 
@@ -316,7 +318,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
         ProcessLifecycleOwner.get().lifecycle.removeObserver(this)
         activityState = ACTIVITY_STOPPED
         stopLocationUpdates()
-        val myAlarmManager = MyAlarmManager(thisContext)
+        val myAlarmManager = MyAlarmManager(thisContext.applicationContext)
         myAlarmManager.cancelAlarm()
         val prefs = thisContext.applicationContext.getSharedPreferences("defaultPreferences", Context.MODE_PRIVATE)
         val editor = prefs.edit()
@@ -361,18 +363,18 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
   fun startRetrieveLocation(context: Context) {
     when (activityState) {
       ACTIVITY_FOREGROUND -> {
-        requestDeviceLocation(context)
+        requestDeviceLocation(context.applicationContext)
         println("ULocationDriverPlugin#requestDeviceLocation()")
       }
 
       ACTIVITY_BACKGROUND -> {
-        println("ULocationDriverPlugin#startRetrieveLocationund #1")
-        getCurrentLocation(thisContext)
+        println("ULocationDriverPlugin#startRetrieveLocation() #1")
+        getCurrentLocation(context.applicationContext)
       }
 
       TEMPORALLY_EXECUTE_IN_BACKGROUND -> {
-        println("ULocationDriverPlugin#startRetrieveLocationund #2")
-        getCurrentLocation(thisContext)
+        println("ULocationDriverPlugin#startRetrieveLocation() #2")
+        getCurrentLocation(context.applicationContext)
         activityState = ACTIVITY_BACKGROUND
       }
     }
