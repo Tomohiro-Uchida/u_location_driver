@@ -83,6 +83,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
     var activityState = ACTIVITY_STOPPED
 
     fun loadFlutterEngine(context: Context): FlutterEngine? {
+      val appContext = context.applicationContext
       println("ULocationDriverPlugin#loadFlutterEngine #1")
       if (FlutterEngineHolder.flutterEngine != null) {
         println("ULocationDriverPlugin#loadFlutterEngine #2")
@@ -100,8 +101,8 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
       val flutterLoader = FlutterLoader()
       if (!flutterLoader.initialized()) {
         println("ULocationDriverPlugin#loadFlutterEngine #6")
-        flutterLoader.startInitialization(context)
-        flutterLoader.ensureInitializationComplete(context, null)
+        flutterLoader.startInitialization(appContext)
+        flutterLoader.ensureInitializationComplete(appContext, null)
       }
       println("ULocationDriverPlugin#loadFlutterEngine #7")
       val callbackInfo = FlutterCallbackInformation.lookupCallbackInformation(callbackHandle)
@@ -117,7 +118,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
         callbackInfo
       )
       println("ULocationDriverPlugin#loadFlutterEngine #10")
-      val flutterEngine = FlutterEngine(context)
+      val flutterEngine = FlutterEngine(appContext)
       flutterEngine.getDartExecutor().executeDartCallback(args)
       FlutterEngineHolder.flutterEngine = flutterEngine
       println("ULocationDriverPlugin#loadFlutterEnginie #11 flutterEngine=$flutterEngine")
