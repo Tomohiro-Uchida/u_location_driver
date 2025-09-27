@@ -231,7 +231,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
   override fun onAttachedToActivity(binding: ActivityPluginBinding) {
     println("ULocationDriverPlugin: onAttachedToActivity()")
 
-    activityState = ACTIVITY_FOREGROUND
+    // activityState = ACTIVITY_FOREGROUND
     myPackageName = binding.activity.intent.component?.packageName
     thisActivity = binding.activity
 
@@ -257,6 +257,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
   override fun onResume(owner: LifecycleOwner) {
     println("ULocationDriverPlugin: onResume()")
     super.onResume(owner)
+    activityState = ACTIVITY_FOREGROUND
     val myAlarmManager = MyAlarmManager(thisContext)
     myAlarmManager.cancelAlarm()
   }
