@@ -82,7 +82,6 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
     const val TEMPORALLY_EXECUTE_IN_BACKGROUND = 3
     var activityState = ACTIVITY_STOPPED
 
-
     fun loadFlutterEngineDelegate(context: Context): FlutterEngine? {
       val appContext = context.applicationContext
       println("ULocationDriverPlugin#loadFlutterEngineDelegate #1 appContext = $appContext")
