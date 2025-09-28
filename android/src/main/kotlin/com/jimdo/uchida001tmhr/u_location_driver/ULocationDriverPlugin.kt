@@ -437,6 +437,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
 
   fun getLocationInBackground(context: Context) {
     println("ULocationDriverPlugin#getLocationInBackground #1")
+    activityState = ACTIVITY_BACKGROUND
     runBlocking {
       if (fusedLocationClients.isEmpty()) {
         println("ULocationDriverPlugin#getLocationInBackground #2")
