@@ -183,14 +183,12 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
               println("ULocationDriverPlugin#getCurrentLocation#OnSuccessListener ")
               if (activityState == ACTIVITY_BACKGROUND || activityState == TEMPORALLY_EXECUTE_IN_BACKGROUND) {
                 backgroundFlutterEngine = loadFlutterEngine(context)
-                /* loadFultterEngine()が成功すると、onAttachedToEngine()が実行され、その中でtoDartChannelが再設定される。*/
                 if (backgroundFlutterEngine != null) {
                   toDartChannel = MethodChannel(
                     backgroundFlutterEngine!!.dartExecutor.binaryMessenger,
                     TO_DART_CHANNEL_NAME
                   )
                 }
-                /* */
               }
               println("ULocationDriverPlugin#getCurrentLocation#OnSuccessListener toDartChannel=$toDartChannel")
               Handler(Looper.getMainLooper()).postDelayed({
