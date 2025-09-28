@@ -1,7 +1,7 @@
 name: u_location_driver
 description: "Location Driver"
 version: 1.0.39+39
-homepage:
+homepage: https://github.com/Tomohiro-Uchida/u_location_driver
 
 environment:
   sdk: ^3.9.0
