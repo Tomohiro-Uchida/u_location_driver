@@ -325,10 +325,10 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
           editor.commit()
         }
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
-        activityState = if (activityState == ACTIVITY_BACKGROUND) {
-          TEMPORALLY_EXECUTE_IN_BACKGROUND
-        } else {
-          ACTIVITY_FOREGROUND
+        activityState = when(activityState) {
+          ACTIVITY_STOPPED -> TEMPORALLY_EXECUTE_IN_BACKGROUND
+          ACTIVITY_BACKGROUND -> TEMPORALLY_EXECUTE_IN_BACKGROUND
+          else -> activityState
         }
         startRetrieveLocation(thisContext.applicationContext);
         result.success("success")
