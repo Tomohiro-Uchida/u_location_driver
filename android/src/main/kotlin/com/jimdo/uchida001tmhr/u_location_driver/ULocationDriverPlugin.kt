@@ -120,6 +120,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
     }
 
     fun loadFlutterEngine(context: Context): FlutterEngine? {
+      /*
       println("ULocationDriverPlugin#loadFlutterEngine #1 dartExecutor#isExecutingDart = ${FlutterEngineHolder.flutterEngine?.getDartExecutor()?.isExecutingDart()}")
       if (FlutterEngineHolder.flutterEngine == null || FlutterEngineHolder.flutterEngine!!.getDartExecutor() == null) {
         println("ULocationDriverPlugin#loadFlutterEngine #2")
@@ -130,6 +131,12 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
         FlutterEngineHolder.flutterEngine = loadFlutterEngineDelegate(context)
       }
       println("ULocationDriverPlugin#loadFlutterEnginie #4 flutterEngine=${FlutterEngineHolder.flutterEngine}")
+       */
+      /* */
+      println("ULocationDriverPlugin#loadFlutterEngine #1")
+      FlutterEngineHolder.flutterEngine = loadFlutterEngineDelegate(context)
+      println("ULocationDriverPlugin#loadFlutterEnginie #2 flutterEngine=${FlutterEngineHolder.flutterEngine}")
+      /* */
       return FlutterEngineHolder.flutterEngine
     }
 
@@ -250,6 +257,13 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
 
   override fun onDetachedFromActivity() {
     println("ULocationDriverPlugin#onDetachedFromActivity()")
+    if (activityState != ACTIVITY_STOPPED) {
+      activityState = ACTIVITY_BACKGROUND
+      stopLocationUpdates()
+      val myAlarmManager = MyAlarmManager(thisContext)
+      myAlarmManager.cancelAlarm()
+      myAlarmManager.registerAlarm()
+    }
   }
 
   override fun onDetachedFromActivityForConfigChanges() {
