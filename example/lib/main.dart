@@ -7,7 +7,6 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:u_location_driver/u_location_driver.dart';
 import 'package:u_location_driver_example/send_to_host.dart';
-import 'package:u_location_driver_example/write_to_file.dart';
 
 @pragma('vm:entry-point')
 Future<void> uLocationBackgroundHandler() async {
@@ -20,8 +19,6 @@ Future<void> uLocationBackgroundHandler() async {
     toDartChannel.setMethodCallHandler((call) {
       switch (call.method) {
         case "location":
-          WriteToFile writeToFile = WriteToFile();
-          writeToFile.write(call.arguments);
           SendToHost sendToHost = SendToHost();
           sendToHost.send(call.arguments);
           return Future.value("ACK");
@@ -65,8 +62,6 @@ class _MyAppState extends State<MyApp> {
     toDartChannel.setMethodCallHandler((call) {
       switch (call.method) {
         case "location":
-          WriteToFile writeToFile = WriteToFile();
-          writeToFile.write(call.arguments);
           SendToHost sendToHost = SendToHost();
           sendToHost.send(call.arguments);
           setState(() {
