@@ -14,9 +14,9 @@ Future<void> uLocationBackgroundHandler() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
     debugPrint("Dart: uLocationBackgroundHandler() -> Set Method Channel");
-    MethodChannel toDartChannel = MethodChannel("com.jimdo.uchida001tmhr.u_location_driver/toDart");
-    debugPrint("Dart: uLocationBackgroundHandler() -> setMethodCallHandler()");
-    toDartChannel.setMethodCallHandler((call) {
+    MethodChannel toDartChannelBackground = MethodChannel("com.jimdo.uchida001tmhr.u_location_driver/toDart/background");
+    debugPrint("Dart: uLocationBackgroundHandler() -> setMethodCallHandler() : toDartChannelBackground = $toDartChannelBackground");
+    toDartChannelBackground.setMethodCallHandler((call) {
       switch (call.method) {
         case "location":
           SendToHost sendToHost = SendToHost();
