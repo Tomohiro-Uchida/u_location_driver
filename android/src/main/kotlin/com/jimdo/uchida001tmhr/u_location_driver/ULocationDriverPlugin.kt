@@ -51,6 +51,7 @@ object FlutterEngineHolder {
   var flutterEngine: FlutterEngine? = null
 
   fun destroy() {
+    println("FlutterEngineHolder#destroy")
     flutterEngine?.destroy()
     flutterEngine = null
   }
@@ -141,14 +142,17 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
           toDartChannelBackground!!.invokeMethod("location", message, object : MethodChannel.Result {
             override fun success(result: Any?) {
               println("informLocationToDart: result = $result")
+              FlutterEngineHolder.destroy()
             }
             override fun error(errorCode: String, errorMessage: String?, errorDetails: Any?) {
               println("informLocationToDart: errorCode = $errorCode")
               println("informLocationToDart: errorMessage = $errorMessage")
               println("informLocationToDart: errorDetails = $errorDetails")
+              FlutterEngineHolder.destroy()
             }
             override fun notImplemented() {
               println("informLocationToDart: notImplemented")
+              FlutterEngineHolder.destroy()
             }
           })
         } else if (!toBackground  && toDartChannel != null) {
