@@ -289,6 +289,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
     if (activityState != ACTIVITY_STOPPED) {
       activityState = ACTIVITY_BACKGROUND
       stopLocationUpdates()
+      getCurrentLocation(thisContext)
       val myAlarmManager = MyAlarmManager(thisContext)
       myAlarmManager.cancelAlarm()
       myAlarmManager.registerAlarm()
@@ -307,6 +308,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
     println("ULocationDriverPlugin#onResume()")
     super.onResume(owner)
     activityState = ACTIVITY_FOREGROUND
+    getCurrentLocation(thisContext)
     val myAlarmManager = MyAlarmManager(thisContext)
     myAlarmManager.cancelAlarm()
   }
@@ -316,6 +318,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
     if (activityState != ACTIVITY_STOPPED) {
       activityState = ACTIVITY_BACKGROUND
       stopLocationUpdates()
+      getCurrentLocation(thisContext)
       val myAlarmManager = MyAlarmManager(thisContext)
       myAlarmManager.cancelAlarm()
       myAlarmManager.registerAlarm()
