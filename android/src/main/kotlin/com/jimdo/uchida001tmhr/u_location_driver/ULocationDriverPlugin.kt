@@ -200,7 +200,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
                   println("ULocationDriverPlugin#getCurrentLocation#OnSuccessListener toDartChannel = $toDartChannel")
                   Handler(Looper.getMainLooper()).postDelayed({
                     informLocationToDart(it, false)
-                  }, 1000)
+                  }, 2000)
                 }
                 ACTIVITY_BACKGROUND, TEMPORALLY_EXECUTE_IN_BACKGROUND -> {
                   backgroundFlutterEngine = loadFlutterEngine(context)
@@ -213,7 +213,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
                   println("ULocationDriverPlugin#getCurrentLocation#OnSuccessListener toDartChannelBackground = $toDartChannelBackground")
                   Handler(Looper.getMainLooper()).postDelayed({
                     informLocationToDart(it, true)
-                  }, 1000)
+                  }, 2000)
                 }
                 else -> {}
               }
