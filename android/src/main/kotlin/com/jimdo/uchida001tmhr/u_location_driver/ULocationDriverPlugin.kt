@@ -123,9 +123,11 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
     }
 
     fun loadFlutterEngine(context: Context): FlutterEngine? {
-      println("ULocationDriverPlugin#loadFlutterEngine #1")
-      FlutterEngineHolder.flutterEngine = loadFlutterEngineDelegate(context)
-      println("ULocationDriverPlugin#loadFlutterEnginie #2 flutterEngine=${FlutterEngineHolder.flutterEngine}")
+      println("ULocationDriverPlugin#loadFlutterEngine #1 flutterEngine = ${FlutterEngineHolder.flutterEngine}")
+      if (FlutterEngineHolder.flutterEngine == null) {
+        FlutterEngineHolder.flutterEngine = loadFlutterEngineDelegate(context)
+      }
+      println("ULocationDriverPlugin#loadFlutterEngine #2 flutterEngine = ${FlutterEngineHolder.flutterEngine}")
       return FlutterEngineHolder.flutterEngine
     }
 
@@ -142,17 +144,17 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
           toDartChannelBackground!!.invokeMethod("location", message, object : MethodChannel.Result {
             override fun success(result: Any?) {
               println("informLocationToDart: result = $result")
-              FlutterEngineHolder.destroy()
+              // FlutterEngineHolder.destroy()
             }
             override fun error(errorCode: String, errorMessage: String?, errorDetails: Any?) {
               println("informLocationToDart: errorCode = $errorCode")
               println("informLocationToDart: errorMessage = $errorMessage")
               println("informLocationToDart: errorDetails = $errorDetails")
-              FlutterEngineHolder.destroy()
+              // FlutterEngineHolder.destroy()
             }
             override fun notImplemented() {
               println("informLocationToDart: notImplemented")
-              FlutterEngineHolder.destroy()
+              // FlutterEngineHolder.destroy()
             }
           })
         } else if (!toBackground  && toDartChannel != null) {
@@ -200,7 +202,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
                   println("ULocationDriverPlugin#getCurrentLocation#OnSuccessListener toDartChannel = $toDartChannel")
                   Handler(Looper.getMainLooper()).postDelayed({
                     informLocationToDart(it, false)
-                  }, 2000)
+                  }, 1000)
                 }
                 ACTIVITY_BACKGROUND, TEMPORALLY_EXECUTE_IN_BACKGROUND -> {
                   backgroundFlutterEngine = loadFlutterEngine(context)
@@ -213,7 +215,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
                   println("ULocationDriverPlugin#getCurrentLocation#OnSuccessListener toDartChannelBackground = $toDartChannelBackground")
                   Handler(Looper.getMainLooper()).postDelayed({
                     informLocationToDart(it, true)
-                  }, 2000)
+                  }, 1000)
                 }
                 else -> {}
               }
@@ -311,6 +313,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
     startRetrieveLocation(thisContext)
     val myAlarmManager = MyAlarmManager(thisContext)
     myAlarmManager.cancelAlarm()
+    FlutterEngineHolder.destroy()
   }
 
   override fun onPause(owner: LifecycleOwner) {
@@ -322,6 +325,13 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
       val myAlarmManager = MyAlarmManager(thisContext)
       myAlarmManager.cancelAlarm()
       myAlarmManager.registerAlarm()
+      backgroundFlutterEngine = loadFlutterEngine(thisContext)
+      if (backgroundFlutterEngine != null) {
+        toDartChannelBackground = MethodChannel(
+          backgroundFlutterEngine!!.dartExecutor.binaryMessenger,
+          TO_DART_CHANNEL_NAME_BACKGROUND
+        )
+      }
     }
     super.onPause(owner)
   }
