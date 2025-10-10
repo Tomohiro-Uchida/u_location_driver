@@ -133,6 +133,9 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
 
     fun informLocationToDart(location: Location?, toBackground: Boolean) {
       println("ULocationDriverPlugin#informLocationToDart Start location = $location")
+      println("ULocationDriverPlugin#informLocationToDart Start toBackground = $toBackground")
+      println("ULocationDriverPlugin#informLocationToDart Start toDartChannel = $toDartChannel")
+      println("ULocationDriverPlugin#informLocationToDart Start toDartChannelBackground = $toDartChannelBackground")
       val locale = Locale.JAPAN
       val dateTimeFormatter =
         DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withLocale(locale)
