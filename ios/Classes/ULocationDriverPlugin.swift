@@ -91,11 +91,7 @@ public class ULocationDriverPlugin: NSObject, FlutterPlugin, CLLocationManagerDe
 
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
     switch call.method {
-    case "initialize1":
-      locationMonitoringStatus = stopped
-      stateMachine(startLocationUpdate: true)
-      result("ACK")
-    case "initialize2":
+    case "initialize":
       locationMonitoringStatus = stopped
       stateMachine(startLocationUpdate: true)
       result("ACK")

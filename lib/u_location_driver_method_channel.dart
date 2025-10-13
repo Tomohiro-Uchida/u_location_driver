@@ -7,13 +7,8 @@ class MethodChannelULocationDriver extends ULocationDriverPlatform {
   /// The method channel used to interact with the native platform.
   final methodChannel = const MethodChannel("com.jimdo.uchida001tmhr.u_location_driver/fromDart");
 
-  @override
-  Future<String?> initialize1() async {
-    return await methodChannel.invokeMethod<String>("initialize1");
-  }
-
-  Future<String?> initialize2() async {
-    return await methodChannel.invokeMethod<String>("initialize2");
+  Future<String?> initialize() async {
+    return await methodChannel.invokeMethod<String>("initialize");
   }
 
   @override

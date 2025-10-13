@@ -1,6 +1,5 @@
 package com.jimdo.uchida001tmhr.u_location_driver
 
-import android.Manifest
 import android.Manifest.permission.ACCESS_BACKGROUND_LOCATION
 import android.Manifest.permission.ACCESS_COARSE_LOCATION
 import android.Manifest.permission.ACCESS_FINE_LOCATION
@@ -24,6 +23,12 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
+import androidx.work.Constraints
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.ListenableWorker
+import androidx.work.WorkerParameters
 import com.google.android.gms.location.CurrentLocationRequest
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
@@ -46,6 +51,21 @@ import kotlinx.coroutines.*
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import androidx.core.content.edit
+import com.google.common.util.concurrent.ListenableFuture
+import androidx.concurrent.futures.CallbackToFutureAdapter
+import com.jimdo.uchida001tmhr.u_location_driver.ULocationDriverPlugin.Companion.ACTIVITY_BACKGROUND
+import com.jimdo.uchida001tmhr.u_location_driver.ULocationDriverPlugin.Companion.ACTIVITY_FOREGROUND
+import com.jimdo.uchida001tmhr.u_location_driver.ULocationDriverPlugin.Companion.TEMPORALLY_EXECUTE_IN_BACKGROUND
+import com.jimdo.uchida001tmhr.u_location_driver.ULocationDriverPlugin.Companion.TO_DART_CHANNEL_NAME_BACKGROUND
+import com.jimdo.uchida001tmhr.u_location_driver.ULocationDriverPlugin.Companion.activityState
+import com.jimdo.uchida001tmhr.u_location_driver.ULocationDriverPlugin.Companion.backgroundFlutterEngine
+import com.jimdo.uchida001tmhr.u_location_driver.ULocationDriverPlugin.Companion.fusedLocationClients
+import com.jimdo.uchida001tmhr.u_location_driver.ULocationDriverPlugin.Companion.informLocationToDart
+import com.jimdo.uchida001tmhr.u_location_driver.ULocationDriverPlugin.Companion.loadFlutterEngine
+import com.jimdo.uchida001tmhr.u_location_driver.ULocationDriverPlugin.Companion.toDartChannel
+import com.jimdo.uchida001tmhr.u_location_driver.ULocationDriverPlugin.Companion.toDartChannelBackground
+import java.time.Duration
 
 object FlutterEngineHolder {
   var flutterEngine: FlutterEngine? = null
@@ -57,8 +77,63 @@ object FlutterEngineHolder {
   }
 }
 
+class LocationWorker(val context: Context, params: WorkerParameters) : ListenableWorker(context, params) {
+  override fun startWork(): ListenableFuture<Result> {
+    return CallbackToFutureAdapter.getFuture { completer ->
+
+      if (fusedLocationClients.isEmpty()) {
+        fusedLocationClients.add(LocationServices.getFusedLocationProviderClient(context))
+      }
+      println("LocationWorker fusedLocationClients = $fusedLocationClients")
+      val permissionCheckCoarseLocation = ContextCompat.checkSelfPermission(
+        context,
+        ACCESS_COARSE_LOCATION
+      ) == PackageManager.PERMISSION_GRANTED
+      val permissionCheckFineLocation = ContextCompat.checkSelfPermission(
+        context,
+        ACCESS_FINE_LOCATION
+      ) == PackageManager.PERMISSION_GRANTED
+      if (permissionCheckCoarseLocation && permissionCheckFineLocation) {
+        fusedLocationClients.forEach { it ->
+          val currentLocationRequestBuilder = CurrentLocationRequest.Builder().apply {
+            setPriority(Priority.PRIORITY_HIGH_ACCURACY)
+          }.build()
+          it.getCurrentLocation(currentLocationRequestBuilder, null)
+            .addOnSuccessListener { it ->
+              println("LocationWorker#getCurrentLocation#OnSuccessListener activityState = $activityState")
+              when (activityState) {
+                ACTIVITY_FOREGROUND -> {
+                  println("LocationWorker#getCurrentLocation#OnSuccessListener toDartChannel = $toDartChannel")
+                  informLocationToDart(it, false)
+                }
+
+                else -> {
+                  backgroundFlutterEngine = loadFlutterEngine(context)
+                  if (backgroundFlutterEngine != null) {
+                    toDartChannelBackground = MethodChannel(
+                      backgroundFlutterEngine!!.dartExecutor.binaryMessenger,
+                      TO_DART_CHANNEL_NAME_BACKGROUND
+                    )
+                  }
+                  println("LocationWorker#getCurrentLocation#OnSuccessListener toDartChannelBackground = $toDartChannelBackground")
+                  informLocationToDart(it, true)
+                }
+              }
+              println("LocationWorker#completer.set(Result.success())")
+              completer.set(Result.success())
+            }
+            .addOnFailureListener { it ->
+              println("LocationWorker#completer.setException()")
+              completer.setException(it)
+            }
+        }
+      }
+    }
+  }
+}
+
 class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, DefaultLifecycleObserver {
-  private lateinit var requestPermissionLauncherPostNotification: ActivityResultLauncher<String>
+  // private lateinit var requestPermissionLauncherPostNotification: ActivityResultLauncher<String>
   private lateinit var requestPermissionLauncherFineLocation: ActivityResultLauncher<String>
   private lateinit var requestPermissionLauncherBackgroundLocation: ActivityResultLauncher<String>
 
@@ -79,11 +154,18 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
     var myPackageName: String? = ""
     var backgroundFlutterEngine: FlutterEngine? = null
     var fusedLocationClients = mutableListOf<FusedLocationProviderClient>()
+
+    /*
     const val ACTIVITY_STOPPED = 0
     const val ACTIVITY_FOREGROUND = 1
     const val ACTIVITY_BACKGROUND = 2
     const val TEMPORALLY_EXECUTE_IN_BACKGROUND = 3
     var activityState = ACTIVITY_STOPPED
+     */
+    const val ACTIVITY_BACKGROUND = 0
+    const val ACTIVITY_FOREGROUND = 1
+    var activityState = ACTIVITY_BACKGROUND
+    const val LOCATION_WORKER_TAG = "LocationWorkerTag"
 
     fun loadFlutterEngineDelegate(context: Context): FlutterEngine? {
       val appContext = context.applicationContext
@@ -149,28 +231,32 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
               println("informLocationToDart: result = $result")
               // FlutterEngineHolder.destroy()
             }
+
             override fun error(errorCode: String, errorMessage: String?, errorDetails: Any?) {
               println("informLocationToDart: errorCode = $errorCode")
               println("informLocationToDart: errorMessage = $errorMessage")
               println("informLocationToDart: errorDetails = $errorDetails")
               // FlutterEngineHolder.destroy()
             }
+
             override fun notImplemented() {
               println("informLocationToDart: notImplemented")
               // FlutterEngineHolder.destroy()
             }
           })
-        } else if (!toBackground  && toDartChannel != null) {
+        } else if (!toBackground && toDartChannel != null) {
           println("ULocationDriverPlugin#invokeMethod(location) toDartChannel = $toDartChannel")
           toDartChannel!!.invokeMethod("location", message, object : MethodChannel.Result {
             override fun success(result: Any?) {
               println("informLocationToDart: result = $result")
             }
+
             override fun error(errorCode: String, errorMessage: String?, errorDetails: Any?) {
               println("informLocationToDart: errorCode = $errorCode")
               println("informLocationToDart: errorMessage = $errorMessage")
               println("informLocationToDart: errorDetails = $errorDetails")
             }
+
             override fun notImplemented() {
               println("informLocationToDart: notImplemented")
             }
@@ -195,7 +281,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
       if (permissionCheckCoarseLocation && permissionCheckFineLocation) {
         fusedLocationClients.forEach { it ->
           val currentLocationRequestBuilder = CurrentLocationRequest.Builder().apply {
-            setPriority(Priority.PRIORITY_BALANCED_POWER_ACCURACY)
+            setPriority(Priority.PRIORITY_HIGH_ACCURACY)
           }.build()
           it.getCurrentLocation(currentLocationRequestBuilder, null)
             .addOnSuccessListener { it ->
@@ -207,7 +293,8 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
                     informLocationToDart(it, false)
                   }, 1000)
                 }
-                ACTIVITY_BACKGROUND, TEMPORALLY_EXECUTE_IN_BACKGROUND -> {
+
+                else -> {
                   backgroundFlutterEngine = loadFlutterEngine(context)
                   if (backgroundFlutterEngine != null) {
                     toDartChannelBackground = MethodChannel(
@@ -220,7 +307,6 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
                     informLocationToDart(it, true)
                   }, 1000)
                 }
-                else -> {}
               }
             }
             .addOnFailureListener { it ->
@@ -233,12 +319,14 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
 
   fun defineRequestPermissions() {
     println("ULocationDriverPlugin#defineRequestPermissions()")
+    /*
     requestPermissionLauncherPostNotification =
       (thisActivity as ComponentActivity).registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
         if (isGranted) {
           getLocationPermission()
         }
       }
+     */
 
     requestPermissionLauncherFineLocation =
       (thisActivity as ComponentActivity).registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
@@ -258,19 +346,15 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
     thisContext = flutterPluginBinding.applicationContext
     binaryMessengerToDart = flutterPluginBinding.binaryMessenger
     when (activityState) {
-      ACTIVITY_STOPPED, ACTIVITY_FOREGROUND -> {
+      ACTIVITY_FOREGROUND -> {
         toDartChannel = MethodChannel(binaryMessengerToDart!!, TO_DART_CHANNEL_NAME)
         println("ULocationDriverPlugin#onAttachedToEngine toDartChannel=$toDartChannel")
       }
-      ACTIVITY_BACKGROUND -> {
+
+      else -> {
         toDartChannelBackground = MethodChannel(binaryMessengerToDart!!, TO_DART_CHANNEL_NAME_BACKGROUND)
         println("ULocationDriverPlugin#onAttachedToEngine toDartChannelBackground=$toDartChannelBackground")
       }
-      TEMPORALLY_EXECUTE_IN_BACKGROUND -> {
-        toDartChannelBackground = MethodChannel(binaryMessengerToDart!!, TO_DART_CHANNEL_NAME_BACKGROUND)
-        println("ULocationDriverPlugin#onAttachedToEngine toDartChannelBackground=$toDartChannelBackground")
-      }
-      else -> {}
     }
     println("ULocationDriverPlugin#onAttachedToEngine toDartChannel=$toDartChannel")
   }
@@ -291,14 +375,8 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
 
   override fun onDetachedFromActivity() {
     println("ULocationDriverPlugin#onDetachedFromActivity()")
-    if (activityState != ACTIVITY_STOPPED) {
-      activityState = ACTIVITY_BACKGROUND
-      stopLocationUpdates()
-      startRetrieveLocation(thisContext)
-      val myAlarmManager = MyAlarmManager(thisContext)
-      myAlarmManager.cancelAlarm()
-      myAlarmManager.registerAlarm()
-    }
+    activityState = ACTIVITY_BACKGROUND
+    stopLocationUpdates()
   }
 
   override fun onDetachedFromActivityForConfigChanges() {
@@ -313,36 +391,28 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
     println("ULocationDriverPlugin#onResume()")
     super.onResume(owner)
     activityState = ACTIVITY_FOREGROUND
-    startRetrieveLocation(thisContext)
-    val myAlarmManager = MyAlarmManager(thisContext)
-    myAlarmManager.cancelAlarm()
     FlutterEngineHolder.destroy()
   }
 
   override fun onPause(owner: LifecycleOwner) {
     println("ULocationDriverPlugin#onPause()")
-    if (activityState != ACTIVITY_STOPPED) {
-      activityState = ACTIVITY_BACKGROUND
-      stopLocationUpdates()
-      startRetrieveLocation(thisContext)
-      val myAlarmManager = MyAlarmManager(thisContext)
-      myAlarmManager.cancelAlarm()
-      myAlarmManager.registerAlarm()
-      backgroundFlutterEngine = loadFlutterEngine(thisContext)
-      if (backgroundFlutterEngine != null) {
-        toDartChannelBackground = MethodChannel(
-          backgroundFlutterEngine!!.dartExecutor.binaryMessenger,
-          TO_DART_CHANNEL_NAME_BACKGROUND
-        )
-      }
+    activityState = ACTIVITY_BACKGROUND
+    stopLocationUpdates()
+    backgroundFlutterEngine = loadFlutterEngine(thisContext)
+    if (backgroundFlutterEngine != null) {
+      toDartChannelBackground = MethodChannel(
+        backgroundFlutterEngine!!.dartExecutor.binaryMessenger,
+        TO_DART_CHANNEL_NAME_BACKGROUND
+      )
     }
     super.onPause(owner)
   }
 
-  @RequiresPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
+  @RequiresPermission(ACCESS_COARSE_LOCATION)
   override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
     println("ULocationDriverPlugin#onMethodCall() -> ${call.method}")
     when (call.method) {
+      /*
       "initialize1" -> {
         println("ULocationDriverPlugin#initialize1")
         val alarmManager = thisContext.applicationContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -359,23 +429,39 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
         getNotificationPermission()
         result.success("success")
       }
+       */
+
+      "initialize" -> {
+        println("ULocationDriverPlugin#initialize2")
+        getLocationPermission()
+        result.success("success")
+      }
 
       "activate" -> {
         println("ULocationDriverPlugin#activate")
+        stopLocationUpdates()
+        WorkManager.getInstance(thisContext).cancelAllWorkByTag(LOCATION_WORKER_TAG)
         if (call.arguments != null) {
           val args = call.arguments as Map<String, Any>
           val prefs = thisContext.applicationContext.getSharedPreferences("defaultPreferences", Context.MODE_PRIVATE)
-          val editor = prefs.edit()
-          editor.putLong("callbackHandle", args["callbackHandle"] as Long)
-          editor.commit()
+          prefs.edit(commit = true) {
+            putLong("callbackHandle", args["callbackHandle"] as Long)
+          }
         }
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
-        activityState = when(activityState) {
-          ACTIVITY_STOPPED -> TEMPORALLY_EXECUTE_IN_BACKGROUND
-          ACTIVITY_BACKGROUND -> TEMPORALLY_EXECUTE_IN_BACKGROUND
-          else -> activityState
-        }
-        startRetrieveLocation(thisContext.applicationContext);
+        getCurrentLocation(thisContext.applicationContext)
+        requestDeviceLocation(thisContext.applicationContext)
+        //15分おきに定期実行を開始
+        //ネットワークに繋がっている場合のみ
+        val constraints = Constraints.Builder()
+          .setRequiredNetworkType(NetworkType.CONNECTED)
+          .build();
+        val locationWorkerRequest = PeriodicWorkRequestBuilder<LocationWorker>(Duration.ofMinutes(15))
+          .setConstraints(constraints)
+          .addTag("LocationWorkerRequest")
+          .build();
+        WorkManager.getInstance(thisContext).enqueue(locationWorkerRequest);
+
         result.success("success")
       }
 
@@ -384,11 +470,15 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
         ProcessLifecycleOwner.get().lifecycle.removeObserver(this)
         activityState = ACTIVITY_STOPPED
         stopLocationUpdates()
+        /*
         val myAlarmManager = MyAlarmManager(thisContext.applicationContext)
         myAlarmManager.cancelAlarm()
+         */
+        WorkManager.getInstance(thisContext).cancelAllWorkByTag(LOCATION_WORKER_TAG)
         val prefs = thisContext.applicationContext.getSharedPreferences("defaultPreferences", Context.MODE_PRIVATE)
-        val editor = prefs.edit()
-        editor.putLong("callbackHandle", 0L)
+        prefs.edit(commit = true) {
+          putLong("callbackHandle", 0L)
+        }
         result.success("success")
       }
 
@@ -397,6 +487,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
     }
   }
 
+  /*
   fun getNotificationPermission() {
     val permissionPostNotification =
       ContextCompat.checkSelfPermission(thisContext, POST_NOTIFICATIONS)
@@ -406,6 +497,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
       requestPermissionLauncherPostNotification.launch(POST_NOTIFICATIONS)
     }
   }
+   */
 
   fun getLocationPermission() {
     val permissionFineLocation =
@@ -425,27 +517,6 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
     }
   }
 
-  @RequiresPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
-  fun startRetrieveLocation(context: Context) {
-    when (activityState) {
-      ACTIVITY_FOREGROUND -> {
-        requestDeviceLocation(context)
-        println("ULocationDriverPlugin#requestDeviceLocation()")
-      }
-
-      ACTIVITY_BACKGROUND -> {
-        println("ULocationDriverPlugin#startRetrieveLocation() #1")
-        getCurrentLocation(context)
-      }
-
-      TEMPORALLY_EXECUTE_IN_BACKGROUND -> {
-        println("ULocationDriverPlugin#startRetrieveLocation() #2")
-        getCurrentLocation(context)
-        activityState = ACTIVITY_BACKGROUND
-      }
-    }
-  }
-
   @RequiresPermission(ACCESS_COARSE_LOCATION)
   fun requestDeviceLocation(context: Context) {
     val permissionFineLocation = ContextCompat.checkSelfPermission(
@@ -460,7 +531,9 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
       permissionBackgroundLocation == PackageManager.PERMISSION_GRANTED
     ) {
       stopLocationUpdates()
-      fusedLocationClients.add(LocationServices.getFusedLocationProviderClient(context))
+      if (fusedLocationClients.isEmpty()) {
+        fusedLocationClients.add(LocationServices.getFusedLocationProviderClient(context))
+      }
       startLocationUpdates()
     }
   }
@@ -469,8 +542,10 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
   fun startLocationUpdates() {
     fusedLocationClients.forEach { it ->
       it.requestLocationUpdates(
-        LocationRequest.Builder(Priority.PRIORITY_BALANCED_POWER_ACCURACY, 10 * 1000 /*10秒*/)
-          .setMinUpdateIntervalMillis(5 * 1000 /*5秒*/)
+        LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 10 * 1000)
+          .setMaxUpdateDelayMillis(30 * 1000) // 最大の更新間隔の設定
+          .setMinUpdateIntervalMillis(5 * 1000) // 最小の更新間隔の設定
+          .setWaitForAccurateLocation(true) // 高精度の位置情報を待つ
           .build(), locationCallback, Looper.getMainLooper()
       )
     }
@@ -495,6 +570,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
     }
   }
 
+  /*
   fun getLocationInBackground(context: Context) {
     println("ULocationDriverPlugin#getLocationInBackground #1")
     activityState = ACTIVITY_BACKGROUND
@@ -511,4 +587,5 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
       }
     }
   }
+   */
 }

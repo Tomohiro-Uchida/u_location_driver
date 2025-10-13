@@ -24,12 +24,8 @@ abstract class ULocationDriverPlatform extends PlatformInterface {
     _instance = instance;
   }
 
-  Future<String?> initialize1() async {
-    throw UnimplementedError('initialize1() has not been implemented.');
-  }
-
-  Future<String?> initialize2() async {
-    throw UnimplementedError('initialize2() has not been implemented.');
+  Future<String?> initialize() async {
+    throw UnimplementedError('initialize() has not been implemented.');
   }
 
   Future<String?> activate({int callbackHandle = 0}) async {
