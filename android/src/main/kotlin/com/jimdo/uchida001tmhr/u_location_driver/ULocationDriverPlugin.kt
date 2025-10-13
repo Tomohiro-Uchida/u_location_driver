@@ -466,7 +466,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
       "deactivate" -> {
         println("ULocationDriverPlugin#deactivate")
         ProcessLifecycleOwner.get().lifecycle.removeObserver(this)
-        activityState = ACTIVITY_STOPPED
+        activityState = ACTIVITY_BACKGROUND
         stopLocationUpdates()
         /*
         val myAlarmManager = MyAlarmManager(thisContext.applicationContext)
