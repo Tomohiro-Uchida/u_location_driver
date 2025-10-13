@@ -54,9 +54,7 @@ import java.util.Locale
 import androidx.core.content.edit
 import com.google.common.util.concurrent.ListenableFuture
 import androidx.concurrent.futures.CallbackToFutureAdapter
-import com.jimdo.uchida001tmhr.u_location_driver.ULocationDriverPlugin.Companion.ACTIVITY_BACKGROUND
 import com.jimdo.uchida001tmhr.u_location_driver.ULocationDriverPlugin.Companion.ACTIVITY_FOREGROUND
-import com.jimdo.uchida001tmhr.u_location_driver.ULocationDriverPlugin.Companion.TEMPORALLY_EXECUTE_IN_BACKGROUND
 import com.jimdo.uchida001tmhr.u_location_driver.ULocationDriverPlugin.Companion.TO_DART_CHANNEL_NAME_BACKGROUND
 import com.jimdo.uchida001tmhr.u_location_driver.ULocationDriverPlugin.Companion.activityState
 import com.jimdo.uchida001tmhr.u_location_driver.ULocationDriverPlugin.Companion.backgroundFlutterEngine
@@ -563,9 +561,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
       println("ULocationDriverPlugin#onLocationResult() activityState = $activityState")
       when (activityState) {
         ACTIVITY_FOREGROUND -> informLocationToDart(locationResult.lastLocation!!, false)
-        ACTIVITY_BACKGROUND -> informLocationToDart(locationResult.lastLocation!!, true)
-        TEMPORALLY_EXECUTE_IN_BACKGROUND -> informLocationToDart(locationResult.lastLocation!!, true)
-        else -> {}
+        else -> informLocationToDart(locationResult.lastLocation!!, true)
       }
     }
   }
