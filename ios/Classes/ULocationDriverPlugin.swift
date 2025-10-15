@@ -93,7 +93,7 @@ public class ULocationDriverPlugin: NSObject, FlutterPlugin, CLLocationManagerDe
     switch call.method {
     case "initialize":
       locationMonitoringStatus = stopped
-      stateMachine(startLocationUpdate: true)
+      // stateMachine(startLocationUpdate: true)
       result("ACK")
     case "activate":
       debugPrint("ULocationDriverPlugin() -> handle() -> activate: locationMonitoringStatus = \(locationMonitoringStatus)")
