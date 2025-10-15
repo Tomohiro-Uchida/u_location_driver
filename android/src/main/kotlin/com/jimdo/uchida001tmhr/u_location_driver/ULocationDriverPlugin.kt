@@ -410,24 +410,6 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
   override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
     println("ULocationDriverPlugin#onMethodCall() -> ${call.method}")
     when (call.method) {
-      /*
-      "initialize1" -> {
-        println("ULocationDriverPlugin#initialize1")
-        val alarmManager = thisContext.applicationContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        if (!alarmManager.canScheduleExactAlarms()) {
-          val intent = Intent(ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
-          intent.setFlags(FLAG_ACTIVITY_NEW_TASK)
-          thisContext.applicationContext.startActivity(intent)
-        }
-        result.success("success")
-      }
-
-      "initialize2" -> {
-        println("ULocationDriverPlugin#initialize2")
-        getNotificationPermission()
-        result.success("success")
-      }
-       */
 
       "initialize" -> {
         println("ULocationDriverPlugin#initialize")
