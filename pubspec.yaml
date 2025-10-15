@@ -1,6 +1,6 @@
 name: u_location_driver
 description: "Location Driver"
-version: 1.0.55+55
+version: 1.0.57+57
 homepage: https://github.com/Tomohiro-Uchida/u_location_driver
 
 environment:

@@ -434,7 +434,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
        */
 
       "initialize" -> {
-        println("ULocationDriverPlugin#initialize2")
+        println("ULocationDriverPlugin#initialize")
         getLocationPermission()
         result.success("success")
       }
