@@ -317,14 +317,6 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
 
   fun defineRequestPermissions() {
     println("ULocationDriverPlugin#defineRequestPermissions()")
-    /*
-    requestPermissionLauncherPostNotification =
-      (thisActivity as ComponentActivity).registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-        if (isGranted) {
-          getLocationPermission()
-        }
-      }
-     */
 
     requestPermissionLauncherFineLocation =
       (thisActivity as ComponentActivity).registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
@@ -339,8 +331,10 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
   }
 
   override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
-    fromDartChannel = MethodChannel(flutterPluginBinding.binaryMessenger, FROM_DART_CHANNEL_NAME)
-    fromDartChannel?.setMethodCallHandler(this)
+    if (fromDartChannel == null) {
+      fromDartChannel = MethodChannel(flutterPluginBinding.binaryMessenger, FROM_DART_CHANNEL_NAME)
+      fromDartChannel?.setMethodCallHandler(this)
+    }
     thisContext = flutterPluginBinding.applicationContext
     binaryMessengerToDart = flutterPluginBinding.binaryMessenger
     /*
@@ -348,8 +342,10 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
       ACTIVITY_FOREGROUND -> {
 
      */
-        toDartChannel = MethodChannel(binaryMessengerToDart!!, TO_DART_CHANNEL_NAME)
-        println("ULocationDriverPlugin#onAttachedToEngine toDartChannel=$toDartChannel")
+    if (toDartChannel == null) {
+      toDartChannel = MethodChannel(binaryMessengerToDart!!, TO_DART_CHANNEL_NAME)
+      println("ULocationDriverPlugin#onAttachedToEngine toDartChannel=$toDartChannel")
+    }
     /*
       }
 
