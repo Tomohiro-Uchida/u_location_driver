@@ -102,7 +102,9 @@ class LocationWorker(val context: Context, params: WorkerParameters) : Listenabl
               when (activityState) {
                 ACTIVITY_FOREGROUND -> {
                   println("LocationWorker#getCurrentLocation#OnSuccessListener toDartChannel = $toDartChannel")
-                  informLocationToDart(it, false)
+                  Handler(Looper.getMainLooper()).postDelayed({
+                    informLocationToDart(it, false)
+                  }, 1000)
                 }
 
                 else -> {
@@ -114,7 +116,9 @@ class LocationWorker(val context: Context, params: WorkerParameters) : Listenabl
                     )
                   }
                   println("LocationWorker#getCurrentLocation#OnSuccessListener toDartChannelBackground = $toDartChannelBackground")
-                  informLocationToDart(it, true)
+                  Handler(Looper.getMainLooper()).postDelayed({
+                    informLocationToDart(it, true)
+                  }, 1000)
                 }
               }
               println("LocationWorker#completer.set(Result.success())")
