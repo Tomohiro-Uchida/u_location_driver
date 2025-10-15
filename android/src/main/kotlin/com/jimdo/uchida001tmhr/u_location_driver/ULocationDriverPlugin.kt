@@ -64,6 +64,7 @@ import com.jimdo.uchida001tmhr.u_location_driver.ULocationDriverPlugin.Companion
 import com.jimdo.uchida001tmhr.u_location_driver.ULocationDriverPlugin.Companion.toDartChannel
 import com.jimdo.uchida001tmhr.u_location_driver.ULocationDriverPlugin.Companion.toDartChannelBackground
 import java.time.Duration
+import java.util.logging.Handler
 
 object FlutterEngineHolder {
   var flutterEngine: FlutterEngine? = null
@@ -563,9 +564,27 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
   val locationCallback: LocationCallback = object : LocationCallback() {
     override fun onLocationResult(locationResult: LocationResult) {
       println("ULocationDriverPlugin#onLocationResult() activityState = $activityState")
-      when (activityState) {
-        ACTIVITY_FOREGROUND -> informLocationToDart(locationResult.lastLocation!!, false)
-        else -> informLocationToDart(locationResult.lastLocation!!, true)
+      val toBackground = when (activityState) {
+        ACTIVITY_FOREGROUND -> {
+          println("ULocationDriverPlugin#getCurrentLocation#OnSuccessListener toDartChannel = $toDartChannel")
+          Handler(Looper.getMainLooper()).postDelayed({
+            informLocationToDart(it, false)
+          }, 1000)
+        }
+
+        else -> {
+          backgroundFlutterEngine = loadFlutterEngine(context)
+          if (backgroundFlutterEngine != null) {
+            toDartChannelBackground = MethodChannel(
+              backgroundFlutterEngine!!.dartExecutor.binaryMessenger,
+              TO_DART_CHANNEL_NAME_BACKGROUND
+            )
+          }
+          println("ULocationDriverPlugin#getCurrentLocation#OnSuccessListener toDartChannelBackground = $toDartChannelBackground")
+          Handler(Looper.getMainLooper()).postDelayed({
+            informLocationToDart(it, true)
+          }, 1000)
+        }
       }
     }
   }
