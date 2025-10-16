@@ -123,6 +123,7 @@ public class ULocationDriverPlugin: NSObject, FlutterPlugin, CLLocationManagerDe
       debugPrint("ULocationDriverPlugin() -> permissionStateMachine() -> .authorizedAlways: mainState = \(mainState)")
       locationPermissionState = locationPermissionState_Permitted
       mainStateMachine()
+      ULocationDriverPlugin.toDartChannel.invokeMethod("readyForLocation", arguments: nil)
       break
     @unknown default:
       break

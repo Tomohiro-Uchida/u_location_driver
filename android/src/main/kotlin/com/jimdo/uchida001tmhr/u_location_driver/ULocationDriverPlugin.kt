@@ -327,6 +327,23 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
 
     requestPermissionLauncherBackgroundLocation =
       (thisActivity as ComponentActivity).registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+        if (isGranted) {
+          toDartChannel!!.invokeMethod("readyForLocation", null, object : MethodChannel.Result {
+            override fun success(result: Any?) {
+              println("readyForLocation: result = $result")
+            }
+
+            override fun error(errorCode: String, errorMessage: String?, errorDetails: Any?) {
+              println("readyForLocation: errorCode = $errorCode")
+              println("readyForLocation: errorMessage = $errorMessage")
+              println("readyForLocation: errorDetails = $errorDetails")
+            }
+
+            override fun notImplemented() {
+              println("readyForLocation: notImplemented")
+            }
+          })
+        }
       }
   }
 
@@ -492,7 +509,23 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
   fun getLocationPermissionBackground() {
     val permissionBackgroundLocation =
       ContextCompat.checkSelfPermission(thisContext, ACCESS_BACKGROUND_LOCATION)
-    if (permissionBackgroundLocation != PackageManager.PERMISSION_GRANTED) {
+    if (permissionBackgroundLocation == PackageManager.PERMISSION_GRANTED) {
+      toDartChannel!!.invokeMethod("readyForLocation", null, object : MethodChannel.Result {
+        override fun success(result: Any?) {
+          println("readyForLocation: result = $result")
+        }
+
+        override fun error(errorCode: String, errorMessage: String?, errorDetails: Any?) {
+          println("readyForLocation: errorCode = $errorCode")
+          println("readyForLocation: errorMessage = $errorMessage")
+          println("readyForLocation: errorDetails = $errorDetails")
+        }
+
+        override fun notImplemented() {
+          println("readyForLocation: notImplemented")
+        }
+      })
+    } else {
       requestPermissionLauncherBackgroundLocation.launch(ACCESS_BACKGROUND_LOCATION)
     }
   }

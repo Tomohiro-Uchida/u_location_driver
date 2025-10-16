@@ -22,6 +22,9 @@ Future<void> uLocationBackgroundHandler() async {
           SendToHost sendToHost = SendToHost();
           sendToHost.send(call.arguments);
           return Future.value("ACK");
+        case "readyForLocation":
+          debugPrint("toDartChannelBackground.setMethodCallHandler() -> readyForLocation");
+          return Future.value("ACK");
         default:
           return Future.value("NAK");
       }
@@ -67,6 +70,9 @@ class _MyAppState extends State<MyApp> {
           setState(() {
             messageFromNative = call.arguments;
           });
+          return Future.value("ACK");
+        case "readyForLocation":
+          debugPrint("toDartChannel.setMethodCallHandler() -> readyForLocation");
           return Future.value("ACK");
         default:
           return Future.value("NAK");
