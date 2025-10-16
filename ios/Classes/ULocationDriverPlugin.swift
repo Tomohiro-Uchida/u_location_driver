@@ -93,7 +93,9 @@ public class ULocationDriverPlugin: NSObject, FlutterPlugin, CLLocationManagerDe
 
   public func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
     debugPrint("ULocationDriverPlugin() -> locationManagerDidChangeAuthorization()")
-    permissionStateMachine()
+    if (clLocationManager.authorizationStatus != .notDetermined) {
+      permissionStateMachine()
+    }
   }
   
   func permissionStateMachine() {
@@ -112,15 +114,15 @@ public class ULocationDriverPlugin: NSObject, FlutterPlugin, CLLocationManagerDe
       debugPrint("ULocationDriverPlugin() -> permissionStateMachine() -> .denied")
       locationPermissionState = locationPermissionState_Initial
       break
-    case .authorizedAlways:
-      debugPrint("ULocationDriverPlugin() -> permissionStateMachine() -> .authorizedAlways: mainState = \(mainState)")
-      locationPermissionState = locationPermissionState_Permitted
-      mainStateMachine()
-      break
     case .authorizedWhenInUse:
       debugPrint("ULocationDriverPlugin() -> permissionStateMachine() -> .authorizedWhenInUse")
       locationPermissionState = locationPermissionState_Permitting
       clLocationManager.requestAlwaysAuthorization()
+      break
+    case .authorizedAlways:
+      debugPrint("ULocationDriverPlugin() -> permissionStateMachine() -> .authorizedAlways: mainState = \(mainState)")
+      locationPermissionState = locationPermissionState_Permitted
+      mainStateMachine()
       break
     @unknown default:
       break
@@ -130,11 +132,9 @@ public class ULocationDriverPlugin: NSObject, FlutterPlugin, CLLocationManagerDe
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
     switch call.method {
     case "initialize":
-      /*
-       locationPermissionState = locationPermissionState_Initial
-       mainState = mainState_Stopped
-       permissionStateMachine()
-       */
+      if (clLocationManager.authorizationStatus == .notDetermined) {
+        permissionStateMachine()
+      }
       result("ACK")
     case "activate":
       debugPrint("ULocationDriverPlugin() -> handle() -> activate: mainState = \(mainState)")
