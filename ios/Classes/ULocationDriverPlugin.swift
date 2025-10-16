@@ -5,34 +5,35 @@ import CoreLocation
 @available(iOS 17.0, *)
 public class ULocationDriverPlugin: NSObject, FlutterPlugin, CLLocationManagerDelegate, @unchecked Sendable {
  
-  public let stopped = 0
-  public let locationPermissioning = 1
-  public let activeForeground = 2
-  public let activeBackground = 3
-  public let activeTerminated = 4
-  public let temporaryExecuteInBackground = 5
-  public let temporaryExecuteInTerminated = 6
-  public var locationMonitoringStatus: Int = 0
+  private let locationPermissionState_Initial = 0
+  private let locationPermissionState_Permitting = 1
+  private let locationPermissionState_Permitted = 2
+  private var locationPermissionState: Int = 0 // locationPermissionState_Initial
+
+  public let mainState_Stopped = 10
+  public let mainState_ActiveForeground = 20
+  public let mainState_ActiveBackground = 30
+  public let mainState_ActiveTerminated = 40
+  public let mainState_TemporaryExecuteInBackground = 50
+  public let mainState_TemporaryExecuteInTerminated = 60
+  public var mainState: Int = 10 // mainState_Stopped
+
+  private var memoryActivate: Bool = false;
   
   public static var shared = ULocationDriverPlugin()
   public let clLocationManager = CLLocationManager() // アクセス可能にする
   
   var channel = FlutterMethodChannel()
   
-  // private static let backgroundSession = CLBackgroundActivitySession()
-  // private let clLocationManager = CLLocationManager()
   static var fromDartChannel = FlutterMethodChannel()
   static var toDartChannel = FlutterMethodChannel()
 
   var backgroundLocation: CLLocation?
-  
-  // static var callbackHandler: String = ""
-  // static var flutterEngineGroup: FlutterEngineGroup!
 
   private override init() {
     super.init()
     self.clLocationManager.delegate = self
-    locationMonitoringStatus = stopped
+    mainState = mainState_Stopped
     
     NotificationCenter.default.addObserver(
         self,
@@ -57,30 +58,30 @@ public class ULocationDriverPlugin: NSObject, FlutterPlugin, CLLocationManagerDe
   }
   
   @objc func viewWillEnterForeground(_ notification: Notification?) {
-    if (locationMonitoringStatus == stopped) {
+    if (mainState == mainState_Stopped) {
       return
     }
-    locationMonitoringStatus = activeForeground
-    debugPrint("locationMonitoringStatus is set to activeForeground")
-    stateMachine()
+    mainState = mainState_ActiveForeground
+    debugPrint("mainState is set to activeForeground")
+    permissionStateMachine()
   }
   
   @objc func viewDidEnterBackground(_ notification: Notification?) {
-    if (locationMonitoringStatus == stopped) {
+    if (mainState == mainState_Stopped) {
       return
     }
-    locationMonitoringStatus = activeBackground
-    debugPrint("locationMonitoringStatus is set to activeBackground")
-    stateMachine()
+    mainState = mainState_ActiveBackground
+    debugPrint("mainState is set to activeBackground")
+    permissionStateMachine()
   }
   
   @objc func viewWillTerminate(_ notification: Notification?) {
-    if (locationMonitoringStatus == stopped) {
+    if (mainState == mainState_Stopped) {
       return
     }
-    locationMonitoringStatus = activeTerminated
-    debugPrint("locationMonitoringStatus is set to activeTerminated")
-    stateMachine()
+    mainState = mainState_ActiveTerminated
+    debugPrint("mainState is set to activeTerminated")
+    permissionStateMachine()
   }
     
   public static func register(with registrar: FlutterPluginRegistrar) {
@@ -90,100 +91,35 @@ public class ULocationDriverPlugin: NSObject, FlutterPlugin, CLLocationManagerDe
     registrar.addMethodCallDelegate(instance, channel: fromDartChannel)
   }
 
-  public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-    switch call.method {
-    case "initialize":
-      locationMonitoringStatus = locationPermissioning
-      stateMachine()
-      result("ACK")
-    case "activate":
-      debugPrint("ULocationDriverPlugin() -> handle() -> activate: locationMonitoringStatus = \(locationMonitoringStatus)")
-      switch (locationMonitoringStatus) {
-      case stopped:
-        debugPrint("ULocationDriverPlugin() -> handle() -> activate -> stopped")
-        locationMonitoringStatus = activeForeground
-        stateMachine()
-        break;
-      case locationPermissioning:
-        stateMachine()
-        break;
-      case activeForeground:
-        debugPrint("ULocationDriverPlugin() -> handle() -> activate -> activeForeground")
-        stateMachine()
-        break
-      case activeBackground:
-        debugPrint("ULocationDriverPlugin() -> handle() -> activate -> activeBackground")
-        locationMonitoringStatus = temporaryExecuteInBackground
-        stateMachine()
-        break
-      case activeTerminated:
-        debugPrint("ULocationDriverPlugin() -> handle() -> activate -> activeTerminated")
-        locationMonitoringStatus = temporaryExecuteInTerminated
-        stateMachine()
-        break
-      default:
-        break
-      }
-      result("ACK")
-    case "deactivate":
-      debugPrint("ULocationDriverPlugin() -> handle() -> deactivate")
-      locationMonitoringStatus = stopped
-      stateMachine()
-      result("ACK")
-    default:
-      result(FlutterMethodNotImplemented)
-    }
+  public func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+    debugPrint("ULocationDriverPlugin() -> locationManagerDidChangeAuthorization()")
+    permissionStateMachine()
   }
   
-  static func informLocationToDart(location: CLLocation) {
-    /// DateFomatterクラスのインスタンス生成
-    let dateFormatter = DateFormatter()
-     
-    /// カレンダー、ロケール、タイムゾーンの設定（未指定時は端末の設定が採用される）
-    dateFormatter.calendar = Calendar(identifier: .gregorian)
-    dateFormatter.locale = Locale(identifier: "ja_JP")
-    dateFormatter.timeZone = TimeZone(identifier:  "Asia/Tokyo")
-     
-    /// 変換フォーマット定義（未設定の場合は自動フォーマットが採用される）
-    dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
-     
-    /// データ変換（Date→テキスト）
-    let dateString = dateFormatter.string(from: Date())
-    let message = "\(dateString),\(location.coordinate.latitude),\(location.coordinate .longitude)"
-    debugPrint("ULocationDriverPlugin() -> informLocationToDart() -> message -> \(message)")
-    toDartChannel.invokeMethod("location", arguments: message)
-  }
- 
-  func stateMachine() {
-    debugPrint("ULocationDriverPlugin() -> stateMachine()")
+  func permissionStateMachine() {
+    debugPrint("ULocationDriverPlugin() -> permissionStateMachine()")
     switch (clLocationManager.authorizationStatus) {
     case .notDetermined:
-      debugPrint("ULocationDriverPlugin() -> .notDetermined")
+      debugPrint("ULocationDriverPlugin() -> permissionStateMachine() -> .notDetermined")
+      locationPermissionState = locationPermissionState_Initial
       clLocationManager.requestWhenInUseAuthorization()
       break
     case .restricted:
-      debugPrint("ULocationDriverPlugin() -> .restricted")
+      debugPrint("ULocationDriverPlugin() -> permissionStateMachine() -> .restricted")
+      locationPermissionState = locationPermissionState_Initial
       break
     case .denied:
-      debugPrint("ULocationDriverPlugin() -> .denied")
+      debugPrint("ULocationDriverPlugin() -> permissionStateMachine() -> .denied")
+      locationPermissionState = locationPermissionState_Initial
       break
     case .authorizedAlways:
-      debugPrint("ULocationDriverPlugin() -> .authorizedAlways: locationMonitoringStatus = \(locationMonitoringStatus)")
-      switch (locationMonitoringStatus) {
-      case stopped:
-        debugPrint("ULocationDriverPlugin() -> .authorizedAlways -> stopped")
-        clLocationManager.stopUpdatingLocation()
-        clLocationManager.stopMonitoringSignificantLocationChanges()
-        break;
-      default:
-        debugPrint("ULocationDriverPlugin() -> .authorizedAlways -> actiforeground etc")
-        locationMonitoring()
-        break
-        break
-      }
+      debugPrint("ULocationDriverPlugin() -> permissionStateMachine() -> .authorizedAlways: mainState = \(mainState)")
+      locationPermissionState = locationPermissionState_Permitted
+      mainStateMachine()
       break
     case .authorizedWhenInUse:
-      debugPrint("ULocationDriverPlugin() -> .authorizedWhenInUse")
+      debugPrint("ULocationDriverPlugin() -> permissionStateMachine() -> .authorizedWhenInUse")
+      locationPermissionState = locationPermissionState_Permitting
       clLocationManager.requestAlwaysAuthorization()
       break
     @unknown default:
@@ -191,30 +127,72 @@ public class ULocationDriverPlugin: NSObject, FlutterPlugin, CLLocationManagerDe
     }
   }
   
-  public func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-    debugPrint("ULocationDriverPlugin() -> locationManagerDidChangeAuthorization() : locationMonitoringStatus = \(locationMonitoringStatus)")
-    if (locationMonitoringStatus == stopped) {
-      return
+  public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+    switch call.method {
+    case "initialize":
+      /*
+       locationPermissionState = locationPermissionState_Initial
+       mainState = mainState_Stopped
+       permissionStateMachine()
+       */
+      result("ACK")
+    case "activate":
+      debugPrint("ULocationDriverPlugin() -> handle() -> activate: mainState = \(mainState)")
+      switch (locationPermissionState ) {
+      case locationPermissionState_Initial, locationPermissionState_Permitting:
+        memoryActivate = true;
+        result("ACK")
+        break;
+      case locationPermissionState_Permitted:
+        switch (mainState) {
+        case mainState_Stopped:
+          debugPrint("ULocationDriverPlugin() -> handle() -> activate -> stopped")
+          mainState = mainState_ActiveForeground
+          mainStateMachine()
+          break;
+        case mainState_ActiveForeground:
+          debugPrint("ULocationDriverPlugin() -> handle() -> activate -> activeForeground")
+          mainStateMachine()
+          break
+        case mainState_ActiveBackground:
+          debugPrint("ULocationDriverPlugin() -> handle() -> activate -> activeBackground")
+          mainState = mainState_TemporaryExecuteInBackground
+          mainStateMachine()
+          break
+        case mainState_ActiveTerminated:
+          debugPrint("ULocationDriverPlugin() -> handle() -> activate -> activeTerminated")
+          mainState = mainState_TemporaryExecuteInTerminated
+          mainStateMachine()
+          break
+        default:
+          break
+        }
+        result("ACK")
+        break
+      default:
+        result("ACK")
+      }
+      break
+    case "deactivate":
+      debugPrint("ULocationDriverPlugin() -> handle() -> deactivate")
+      mainState = mainState_Stopped
+      mainStateMachine()
+      result("ACK")
+    default:
+      result(FlutterMethodNotImplemented)
     }
-    stateMachine()
   }
   
-  public func locationMonitoring() {
-    debugPrint("ULocationDriverPlugin() -> locationMonitoring()")
-    switch (locationMonitoringStatus) {
-    case stopped:
-      debugPrint("ULocationDriverPlugin() -> locationMonitoring() -> stopped")
+  public func mainStateMachine() {
+    debugPrint("ULocationDriverPlugin() -> mainStateMachine()")
+    switch (mainState) {
+    case mainState_Stopped:
+      debugPrint("ULocationDriverPlugin() -> mainStateMachine() -> stopped")
       clLocationManager.stopUpdatingLocation()
       clLocationManager.stopMonitoringSignificantLocationChanges()
       break
-    case locationPermissioning:
-      debugPrint("ULocationDriverPlugin() -> locationMonitoring() -> locationPermissioning")
-      if (clLocationManager.authorizationStatus == .authorizedAlways) {
-        locationMonitoringStatus = activeBackground
-      }
-      break;
-    case activeForeground, temporaryExecuteInBackground, temporaryExecuteInTerminated:
-      debugPrint("ULocationDriverPlugin() -> locationMonitoring() -> activeForegroud etc")
+    case mainState_ActiveForeground, mainState_TemporaryExecuteInBackground, mainState_TemporaryExecuteInTerminated:
+      debugPrint("ULocationDriverPlugin() -> mainStateMachine() -> activeForegroud etc")
       clLocationManager.delegate = self
       // clLocationManager.distanceFilter = kCLDistanceFilterNone
       clLocationManager.distanceFilter  = 10.0
@@ -224,8 +202,8 @@ public class ULocationDriverPlugin: NSObject, FlutterPlugin, CLLocationManagerDe
       clLocationManager.startUpdatingLocation()
       debugPrint("ULocationDriverPlugin() -> startUpdatingLocation in activeForeground/temporaryForegroundFromBackground")
       break
-    case activeBackground, activeTerminated:
-      debugPrint("ULocationDriverPlugin() -> locationMonitoring() -> activeBackground etc")
+    case mainState_ActiveBackground, mainState_ActiveTerminated:
+      debugPrint("ULocationDriverPlugin() -> mainStateMachine() -> activeBackground etc")
       clLocationManager.delegate = self
       clLocationManager.allowsBackgroundLocationUpdates = true
       clLocationManager.pausesLocationUpdatesAutomatically = false
@@ -250,47 +228,32 @@ public class ULocationDriverPlugin: NSObject, FlutterPlugin, CLLocationManagerDe
     debugPrint("ULocationDriverPlugin() -> locationManager()")
     if (locations.last != nil) {
       ULocationDriverPlugin.informLocationToDart(location: locations.last!)
-      switch (locationMonitoringStatus) {
-      case stopped:
-        clLocationManager.stopUpdatingLocation()
-        clLocationManager.stopMonitoringSignificantLocationChanges()
-        break
-      case locationPermissioning:
-        break
-      case temporaryExecuteInBackground:
-        locationMonitoring()
-        locationMonitoringStatus = activeBackground
-        break
-      case temporaryExecuteInTerminated:
-        locationMonitoring()
-        locationMonitoringStatus = activeTerminated
-        break
-      default:
-        locationMonitoring()
-        break
-      }
+      mainStateMachine()
     }
   }
 
   public func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
     // エラーが発生した際に実行したい処理
-    switch (locationMonitoringStatus) {
-    case stopped:
-      clLocationManager.stopUpdatingLocation()
-      clLocationManager.stopMonitoringSignificantLocationChanges()
-      break
-    case temporaryExecuteInBackground:
-      locationMonitoring()
-      locationMonitoringStatus = activeBackground
-      break
-    case temporaryExecuteInTerminated:
-      locationMonitoring()
-      locationMonitoringStatus = activeTerminated
-      break
-    default:
-      locationMonitoring()
-      break
-    }
+    mainStateMachine()
   }
   
+  static func informLocationToDart(location: CLLocation) {
+    /// DateFomatterクラスのインスタンス生成
+    let dateFormatter = DateFormatter()
+     
+    /// カレンダー、ロケール、タイムゾーンの設定（未指定時は端末の設定が採用される）
+    dateFormatter.calendar = Calendar(identifier: .gregorian)
+    dateFormatter.locale = Locale(identifier: "ja_JP")
+    dateFormatter.timeZone = TimeZone(identifier:  "Asia/Tokyo")
+     
+    /// 変換フォーマット定義（未設定の場合は自動フォーマットが採用される）
+    dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+     
+    /// データ変換（Date→テキスト）
+    let dateString = dateFormatter.string(from: Date())
+    let message = "\(dateString),\(location.coordinate.latitude),\(location.coordinate .longitude)"
+    debugPrint("ULocationDriverPlugin() -> informLocationToDart() -> message -> \(message)")
+    toDartChannel.invokeMethod("location", arguments: message)
+  }
+ 
 }

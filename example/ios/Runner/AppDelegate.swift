@@ -17,8 +17,8 @@ import CoreLocation
       //  Pluginインスタンスにアクセス
       let plugin = ULocationDriverPlugin.shared
       plugin.clLocationManager.delegate = plugin
-      plugin.locationMonitoringStatus = plugin.activeTerminated
-      plugin.locationMonitoring()
+      plugin.mainState = plugin.mainState_ActiveTerminated
+      plugin.mainStateMachine()
     }
     
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
