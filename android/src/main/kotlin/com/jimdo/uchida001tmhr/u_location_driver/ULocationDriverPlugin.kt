@@ -413,6 +413,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
     println("ULocationDriverPlugin#onPause()")
     activityState = ACTIVITY_BACKGROUND
     stopLocationUpdates()
+    /*
     backgroundFlutterEngine = loadFlutterEngine(thisContext)
     if (backgroundFlutterEngine != null) {
       toDartChannelBackground = MethodChannel(
@@ -420,6 +421,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
         TO_DART_CHANNEL_NAME_BACKGROUND
       )
     }
+     */
     super.onPause(owner)
   }
 
