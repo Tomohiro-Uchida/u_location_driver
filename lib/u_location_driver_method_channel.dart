@@ -2,13 +2,11 @@
 import 'package:flutter/services.dart';
 import 'u_location_driver_platform_interface.dart';
 
-final methodChannel = const MethodChannel("com.jimdo.uchida001tmhr.u_location_driver/fromDart");
-
 /// An implementation of [ULocationDriverPlatform] that uses method channels.
 class MethodChannelULocationDriver extends ULocationDriverPlatform {
   /// The method channel used to interact with the native platform.
 
-  // final methodChannel = const MethodChannel("com.jimdo.uchida001tmhr.u_location_driver/fromDart");
+  static final methodChannel = const MethodChannel("com.jimdo.uchida001tmhr.u_location_driver/fromDart");
 
   @override
   Future<String?> initialize() async {
