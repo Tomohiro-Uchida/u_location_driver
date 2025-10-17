@@ -415,10 +415,6 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
     stopLocationUpdates()
     backgroundFlutterEngine = loadFlutterEngine(thisContext)
     if (backgroundFlutterEngine != null) {
-      fromDartChannel = MethodChannel(
-        backgroundFlutterEngine!!.dartExecutor.binaryMessenger,
-        FROM_DART_CHANNEL_NAME
-      )
       toDartChannelBackground = MethodChannel(
         backgroundFlutterEngine!!.dartExecutor.binaryMessenger,
         TO_DART_CHANNEL_NAME_BACKGROUND
