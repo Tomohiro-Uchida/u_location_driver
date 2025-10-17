@@ -299,11 +299,11 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
                       backgroundFlutterEngine!!.dartExecutor.binaryMessenger,
                       TO_DART_CHANNEL_NAME_BACKGROUND
                     )
+                    println("ULocationDriverPlugin#getCurrentLocation#OnSuccessListener toDartChannelBackground = $toDartChannelBackground")
+                    Handler(Looper.getMainLooper()).postDelayed({
+                      informLocationToDart(it, true)
+                    }, 1000)
                   }
-                  println("ULocationDriverPlugin#getCurrentLocation#OnSuccessListener toDartChannelBackground = $toDartChannelBackground")
-                  Handler(Looper.getMainLooper()).postDelayed({
-                    informLocationToDart(it, true)
-                  }, 1000)
                 }
               }
             }
