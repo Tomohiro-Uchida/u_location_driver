@@ -76,6 +76,8 @@ class LocationWorker(val context: Context, params: WorkerParameters) : Listenabl
     return CallbackToFutureAdapter.getFuture { completer ->
 
       if (fusedLocationClients.isEmpty()) {
+
+        println("LocationWorker#fusedLocationClients.add()")
         fusedLocationClients.add(LocationServices.getFusedLocationProviderClient(context))
       }
       println("LocationWorker fusedLocationClients = $fusedLocationClients")
@@ -92,6 +94,7 @@ class LocationWorker(val context: Context, params: WorkerParameters) : Listenabl
           val currentLocationRequestBuilder = CurrentLocationRequest.Builder().apply {
             setPriority(Priority.PRIORITY_HIGH_ACCURACY)
           }.build()
+          println("LocationWorker#it.getCurrentLocation()")
           it.getCurrentLocation(currentLocationRequestBuilder, null)
             .addOnSuccessListener { it ->
               println("LocationWorker#getCurrentLocation#OnSuccessListener activityState = $activityState")
