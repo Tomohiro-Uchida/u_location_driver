@@ -357,24 +357,10 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
     }
     thisContext = flutterPluginBinding.applicationContext
     binaryMessengerToDart = flutterPluginBinding.binaryMessenger
-    /*
-    when (activityState) {
-      ACTIVITY_FOREGROUND -> {
-
-     */
     if (toDartChannel == null) {
       toDartChannel = MethodChannel(binaryMessengerToDart!!, TO_DART_CHANNEL_NAME)
       println("ULocationDriverPlugin#onAttachedToEngine toDartChannel=$toDartChannel")
     }
-    /*
-      }
-
-      else -> {
-        toDartChannelBackground = MethodChannel(binaryMessengerToDart!!, TO_DART_CHANNEL_NAME_BACKGROUND)
-        println("ULocationDriverPlugin#onAttachedToEngine toDartChannelBackground=$toDartChannelBackground")
-      }
-    }
-     */
   }
 
   override fun onAttachedToActivity(binding: ActivityPluginBinding) {
@@ -422,6 +408,11 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
         backgroundFlutterEngine!!.dartExecutor.binaryMessenger,
         TO_DART_CHANNEL_NAME_BACKGROUND
       )
+      fromDartChannel = MethodChannel(
+        backgroundFlutterEngine!!.dartExecutor.binaryMessenger,
+        FROM_DART_CHANNEL_NAME
+      )
+      fromDartChannel?.setMethodCallHandler(this)
     }
     super.onPause(owner)
   }
