@@ -421,11 +421,13 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
         backgroundFlutterEngine!!.dartExecutor.binaryMessenger,
         TO_DART_CHANNEL_NAME_BACKGROUND
       )
+      /*
       fromDartChannel = MethodChannel(
         backgroundFlutterEngine!!.dartExecutor.binaryMessenger,
         FROM_DART_CHANNEL_NAME
       )
       fromDartChannel?.setMethodCallHandler(this)
+       */
     }
     val constraints = Constraints.Builder()
       .setRequiredNetworkType(NetworkType.CONNECTED)

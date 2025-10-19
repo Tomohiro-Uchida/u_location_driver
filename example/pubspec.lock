@@ -450,7 +450,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "1.0.81+82"
+    version: "1.0.83+83"
   vector_math:
     dependency: transitive
     description:
