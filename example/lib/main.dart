@@ -48,7 +48,7 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   final uLocationDriverPlugin = ULocationDriver();
   MethodChannel toDartChannel = MethodChannel("com.jimdo.uchida001tmhr.u_location_driver/toDart");
   String messageFromNative = "Waiting for message form Native ...";
@@ -101,13 +101,28 @@ class _MyAppState extends State<MyApp> {
           });
         }
       });
+
+      WidgetsBinding.instance.addObserver(this);
+      // Init subscription
     });
+  }
+
+  @override
+  Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
+    switch (state) {
+      case AppLifecycleState.resumed:
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.hidden:
+      case AppLifecycleState.paused:
+      case AppLifecycleState.detached:
+    }
   }
 
   @override
   // Widget破棄時
   void dispose() {
     // 監視の終了を登録
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 

@@ -63,7 +63,8 @@ public class ULocationDriverPlugin: NSObject, FlutterPlugin, CLLocationManagerDe
     }
     mainState = mainState_ActiveForeground
     debugPrint("mainState is set to activeForeground")
-    permissionStateMachine()
+    // permissionStateMachine()
+    mainStateMachine()
   }
   
   @objc func viewDidEnterBackground(_ notification: Notification?) {
@@ -72,7 +73,8 @@ public class ULocationDriverPlugin: NSObject, FlutterPlugin, CLLocationManagerDe
     }
     mainState = mainState_ActiveBackground
     debugPrint("mainState is set to activeBackground")
-    permissionStateMachine()
+    // permissionStateMachine()
+    mainStateMachine()
   }
   
   @objc func viewWillTerminate(_ notification: Notification?) {
@@ -81,7 +83,8 @@ public class ULocationDriverPlugin: NSObject, FlutterPlugin, CLLocationManagerDe
     }
     mainState = mainState_ActiveTerminated
     debugPrint("mainState is set to activeTerminated")
-    permissionStateMachine()
+    // permissionStateMachine()
+    mainStateMachine()
   }
     
   public static func register(with registrar: FlutterPluginRegistrar) {
@@ -133,9 +136,9 @@ public class ULocationDriverPlugin: NSObject, FlutterPlugin, CLLocationManagerDe
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
     switch call.method {
     case "initialize":
-      if (clLocationManager.authorizationStatus == .notDetermined) {
+      // if (clLocationManager.authorizationStatus == .notDetermined) {
         permissionStateMachine()
-      }
+      // }
       result("ACK")
     case "activate":
       debugPrint("ULocationDriverPlugin() -> handle() -> activate: mainState = \(mainState)")
@@ -191,9 +194,10 @@ public class ULocationDriverPlugin: NSObject, FlutterPlugin, CLLocationManagerDe
       debugPrint("ULocationDriverPlugin() -> mainStateMachine() -> stopped")
       clLocationManager.stopUpdatingLocation()
       clLocationManager.stopMonitoringSignificantLocationChanges()
+      debugPrint("ULocationDriverPlugin() -> stopMonitoringSignificantLocationChanges()")
       break
     case mainState_ActiveForeground, mainState_TemporaryExecuteInBackground, mainState_TemporaryExecuteInTerminated:
-      debugPrint("ULocationDriverPlugin() -> mainStateMachine() -> activeForegroud etc")
+      debugPrint("ULocationDriverPlugin() -> mainStateMachine() -> activeForegroud/TemporaryExecuteInBackground/TemporaryExecuteInTerminated")
       clLocationManager.delegate = self
       // clLocationManager.distanceFilter = kCLDistanceFilterNone
       clLocationManager.distanceFilter  = 10.0
@@ -201,10 +205,10 @@ public class ULocationDriverPlugin: NSObject, FlutterPlugin, CLLocationManagerDe
       // clLocationManager.desiredAccuracy = kCLLocationAccuracyReduced
       clLocationManager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
       clLocationManager.startUpdatingLocation()
-      debugPrint("ULocationDriverPlugin() -> startUpdatingLocation in activeForeground/temporaryForegroundFromBackground")
+      debugPrint("ULocationDriverPlugin() -> startUpdatingLocation()")
       break
     case mainState_ActiveBackground, mainState_ActiveTerminated:
-      debugPrint("ULocationDriverPlugin() -> mainStateMachine() -> activeBackground etc")
+      debugPrint("ULocationDriverPlugin() -> mainStateMachine() -> activeBackground/ActiveTerminated")
       clLocationManager.delegate = self
       clLocationManager.allowsBackgroundLocationUpdates = true
       clLocationManager.pausesLocationUpdatesAutomatically = false
