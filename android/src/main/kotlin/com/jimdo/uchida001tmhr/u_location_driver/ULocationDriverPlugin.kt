@@ -1,11 +1,11 @@
 package com.jimdo.uchida001tmhr.u_location_driver
 
+import android.Manifest
 import android.Manifest.permission.ACCESS_BACKGROUND_LOCATION
 import android.Manifest.permission.ACCESS_COARSE_LOCATION
 import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.app.AlarmManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
@@ -50,15 +50,14 @@ import java.util.Locale
 import androidx.core.content.edit
 import com.google.common.util.concurrent.ListenableFuture
 import androidx.concurrent.futures.CallbackToFutureAdapter
+import androidx.work.ExistingPeriodicWorkPolicy
 import com.jimdo.uchida001tmhr.u_location_driver.ULocationDriverPlugin.Companion.ACTIVITY_FOREGROUND
-import com.jimdo.uchida001tmhr.u_location_driver.ULocationDriverPlugin.Companion.LOCATION_WORKER_TAG
 import com.jimdo.uchida001tmhr.u_location_driver.ULocationDriverPlugin.Companion.TO_DART_CHANNEL_NAME_BACKGROUND
 import com.jimdo.uchida001tmhr.u_location_driver.ULocationDriverPlugin.Companion.activityState
 import com.jimdo.uchida001tmhr.u_location_driver.ULocationDriverPlugin.Companion.backgroundFlutterEngine
 import com.jimdo.uchida001tmhr.u_location_driver.ULocationDriverPlugin.Companion.fusedLocationClients
 import com.jimdo.uchida001tmhr.u_location_driver.ULocationDriverPlugin.Companion.informLocationToDart
 import com.jimdo.uchida001tmhr.u_location_driver.ULocationDriverPlugin.Companion.loadFlutterEngine
-import com.jimdo.uchida001tmhr.u_location_driver.ULocationDriverPlugin.Companion.thisContext
 import com.jimdo.uchida001tmhr.u_location_driver.ULocationDriverPlugin.Companion.toDartChannel
 import com.jimdo.uchida001tmhr.u_location_driver.ULocationDriverPlugin.Companion.toDartChannelBackground
 import java.time.Duration
@@ -76,12 +75,6 @@ object FlutterEngineHolder {
 class LocationWorker(val context: Context, params: WorkerParameters) : ListenableWorker(context, params) {
   override fun startWork(): ListenableFuture<Result> {
     return CallbackToFutureAdapter.getFuture { completer ->
-      val uLocationDriverPlugin = ULocationDriverPlugin()
-      uLocationDriverPlugin.stopLocationUpdates()
-      // WorkManager.getInstance(thisContext).cancelAllWorkByTag(LOCATION_WORKER_TAG)
-      println("LocationWorker#startWork() fusedLocationClients.add()")
-      fusedLocationClients.add(LocationServices.getFusedLocationProviderClient(context))
-
       println("LocationWorker fusedLocationClients = $fusedLocationClients")
       val permissionCheckCoarseLocation = ContextCompat.checkSelfPermission(
         context,
@@ -92,6 +85,10 @@ class LocationWorker(val context: Context, params: WorkerParameters) : Listenabl
         ACCESS_FINE_LOCATION
       ) == PackageManager.PERMISSION_GRANTED
       if (permissionCheckCoarseLocation && permissionCheckFineLocation) {
+        if (fusedLocationClients.isEmpty()) {
+          fusedLocationClients.add(LocationServices.getFusedLocationProviderClient(context))
+        }
+        println("LocationWorker fusedLocationClients.size = ${fusedLocationClients.size}")
         fusedLocationClients.forEach { it ->
           val currentLocationRequestBuilder = CurrentLocationRequest.Builder().apply {
             setPriority(Priority.PRIORITY_HIGH_ACCURACY)
@@ -161,7 +158,8 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
     const val ACTIVITY_BACKGROUND = 0
     const val ACTIVITY_FOREGROUND = 1
     var activityState = ACTIVITY_BACKGROUND
-    const val LOCATION_WORKER_TAG = "LocationWorkerTag"
+    const val LOCATION_WORKER_REQUEST_TAG = "LocationWorkerTag"
+    const val LOCATION_WORK_TAG = "LocationWorkTag"
 
     fun loadFlutterEngineDelegate(context: Context): FlutterEngine? {
       val appContext = context.applicationContext
@@ -262,11 +260,6 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
     }
 
     fun getCurrentLocation(context: Context) {
-      val uLocationDriverPlugin = ULocationDriverPlugin()
-      uLocationDriverPlugin.stopLocationUpdates()
-      // WorkManager.getInstance(thisContext).cancelAllWorkByTag(LOCATION_WORKER_TAG)
-      println("ULocationDriverPlugin#getCurrentLocation fusedLocationClients.add()")
-      fusedLocationClients.add(LocationServices.getFusedLocationProviderClient(context))
       println("ULocationDriverPlugin#getCurrentLocation fusedLocationClients = $fusedLocationClients")
       val permissionCheckCoarseLocation = ContextCompat.checkSelfPermission(
         context,
@@ -372,13 +365,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
 
   override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
     println("ULocationDriverPlugin#onDetachedFromEngine()")
-  }
-
-  override fun onDetachedFromActivity() {
-    println("ULocationDriverPlugin#onDetachedFromActivity()")
     activityState = ACTIVITY_BACKGROUND
-    stopLocationUpdates()
-    WorkManager.getInstance(thisContext).cancelAllWorkByTag(LOCATION_WORKER_TAG)
     backgroundFlutterEngine = loadFlutterEngine(thisContext)
     if (backgroundFlutterEngine != null) {
       toDartChannelBackground = MethodChannel(
@@ -391,18 +378,19 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
       )
       fromDartChannel?.setMethodCallHandler(this)
     }
-    val prefs = thisContext.applicationContext.getSharedPreferences("defaultPreferences", Context.MODE_PRIVATE)
-    println("ULocationDriverPlugin#onDetachedFromActivity() prefs.getBoolean(\"locating\") = ${prefs.getBoolean("locating", false)}");
-    if (prefs.getBoolean("locating", false)) {
-      val constraints = Constraints.Builder()
-        .setRequiredNetworkType(NetworkType.CONNECTED)
-        .build();
-      val locationWorkerRequest = PeriodicWorkRequestBuilder<LocationWorker>(Duration.ofMinutes(15))
-        .setConstraints(constraints)
-        .addTag("LocationWorkerRequest")
-        .build();
-      WorkManager.getInstance(thisContext).enqueue(locationWorkerRequest);
-    }
+    val constraints = Constraints.Builder()
+      .setRequiredNetworkType(NetworkType.CONNECTED)
+      .build();
+    val locationWorkerRequest = PeriodicWorkRequestBuilder<LocationWorker>(Duration.ofMinutes(15))
+      .setConstraints(constraints)
+      .addTag("LocationWorkerRequest")
+      .build();
+    WorkManager.getInstance(thisContext)
+      .enqueueUniquePeriodicWork(LOCATION_WORK_TAG, ExistingPeriodicWorkPolicy.KEEP, locationWorkerRequest);
+  }
+
+  override fun onDetachedFromActivity() {
+    println("ULocationDriverPlugin#onDetachedFromActivity()")
   }
 
   override fun onDetachedFromActivityForConfigChanges() {
@@ -413,25 +401,19 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
     println("ULocationDriverPlugin#onReattachedToActivityForConfigChanges()")
   }
 
+  @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
   override fun onResume(owner: LifecycleOwner) {
     println("ULocationDriverPlugin#onResume()")
     super.onResume(owner)
     activityState = ACTIVITY_FOREGROUND
     FlutterEngineHolder.destroy()
-    stopLocationUpdates()
-    WorkManager.getInstance(thisContext).cancelAllWorkByTag(LOCATION_WORKER_TAG)
-    val prefs = thisContext.applicationContext.getSharedPreferences("defaultPreferences", Context.MODE_PRIVATE)
-    println("ULocationDriverPlugin#onResume() prefs.getBoolean(\"locating\") = ${prefs.getBoolean("locating", false)}");
-    if (prefs.getBoolean("locating", false)) {
-      startLocationUpdates()
-    }
+    WorkManager.getInstance(thisContext).cancelAllWork()
+    startLocationUpdates()
   }
 
   override fun onPause(owner: LifecycleOwner) {
     println("ULocationDriverPlugin#onPause()")
     activityState = ACTIVITY_BACKGROUND
-    stopLocationUpdates()
-    WorkManager.getInstance(thisContext).cancelAllWorkByTag(LOCATION_WORKER_TAG)
     backgroundFlutterEngine = loadFlutterEngine(thisContext)
     if (backgroundFlutterEngine != null) {
       toDartChannelBackground = MethodChannel(
@@ -444,18 +426,15 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
       )
       fromDartChannel?.setMethodCallHandler(this)
     }
-    val prefs = thisContext.applicationContext.getSharedPreferences("defaultPreferences", Context.MODE_PRIVATE)
-    println("ULocationDriverPlugin#onPause() prefs.getBoolean(\"locating\") = ${prefs.getBoolean("locating", false)}");
-    if (prefs.getBoolean("locating", false)) {
-      val constraints = Constraints.Builder()
-        .setRequiredNetworkType(NetworkType.CONNECTED)
-        .build();
-      val locationWorkerRequest = PeriodicWorkRequestBuilder<LocationWorker>(Duration.ofMinutes(15))
-        .setConstraints(constraints)
-        .addTag("LocationWorkerRequest")
-        .build();
-      WorkManager.getInstance(thisContext).enqueue(locationWorkerRequest);
-    }
+    val constraints = Constraints.Builder()
+      .setRequiredNetworkType(NetworkType.CONNECTED)
+      .build();
+    val locationWorkerRequest = PeriodicWorkRequestBuilder<LocationWorker>(Duration.ofMinutes(15))
+      .setConstraints(constraints)
+      .addTag(LOCATION_WORKER_REQUEST_TAG)
+      .build()
+    WorkManager.getInstance(thisContext)
+      .enqueueUniquePeriodicWork(LOCATION_WORK_TAG, ExistingPeriodicWorkPolicy.KEEP, locationWorkerRequest);
     super.onPause(owner)
   }
 
@@ -467,13 +446,15 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
       "initialize" -> {
         println("ULocationDriverPlugin#initialize")
         getLocationPermission()
+        stopLocationUpdates()
+        WorkManager.getInstance(thisContext).cancelAllWork()
+        fusedLocationClients.add(LocationServices.getFusedLocationProviderClient(thisContext.applicationContext))
+        println("ULocationDriverPlugin#initialize fusedLocationClients.size = ${fusedLocationClients.size}")
         result.success("success")
       }
 
       "activate" -> {
         println("ULocationDriverPlugin#activate")
-        stopLocationUpdates()
-        WorkManager.getInstance(thisContext).cancelAllWorkByTag(LOCATION_WORKER_TAG)
         val prefs = thisContext.applicationContext.getSharedPreferences("defaultPreferences", Context.MODE_PRIVATE)
         if (call.arguments != null) {
           val args = call.arguments as Map<String, Any>
@@ -482,9 +463,6 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
           }
         }
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
-        prefs.edit(commit = true) {
-          putBoolean("locating", true)  // Must be here
-        }
         getCurrentLocation(thisContext.applicationContext) // 初回の位置情報取得
         requestDeviceLocation(thisContext.applicationContext)
 
@@ -496,11 +474,10 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
         ProcessLifecycleOwner.get().lifecycle.removeObserver(this)
         activityState = ACTIVITY_BACKGROUND
         stopLocationUpdates()
-        WorkManager.getInstance(thisContext).cancelAllWorkByTag(LOCATION_WORKER_TAG)
+        WorkManager.getInstance(thisContext).cancelAllWork()
         val prefs = thisContext.applicationContext.getSharedPreferences("defaultPreferences", Context.MODE_PRIVATE)
         prefs.edit(commit = true) {
           putLong("callbackHandle", 0L)
-          putBoolean("locating", false)
         }
         result.success("success")
       }
@@ -557,15 +534,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
     if (permissionFineLocation == PackageManager.PERMISSION_GRANTED &&
       permissionBackgroundLocation == PackageManager.PERMISSION_GRANTED
     ) {
-      stopLocationUpdates()
-      WorkManager.getInstance(thisContext).cancelAllWorkByTag(LOCATION_WORKER_TAG)
-      println("ULocationDriverPlugin#requestDeviceLocation fusedLocationClients.add()")
-      fusedLocationClients.add(LocationServices.getFusedLocationProviderClient(context))
-      val prefs = thisContext.applicationContext.getSharedPreferences("defaultPreferences", Context.MODE_PRIVATE)
-      println("ULocationDriverPlugin#requestDeviceLocation() prefs.getBoolean(\"locating\") = ${prefs.getBoolean("locating", false)}");
-      if (prefs.getBoolean("locating", false)) {
-        startLocationUpdates()
-      }
+      WorkManager.getInstance(thisContext).cancelAllWork()
     }
   }
 
