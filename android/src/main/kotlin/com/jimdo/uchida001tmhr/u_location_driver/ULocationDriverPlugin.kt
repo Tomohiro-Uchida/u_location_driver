@@ -340,16 +340,16 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
   }
 
   override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
-    if (fromDartChannel == null) {
+    // if (fromDartChannel == null) {
       fromDartChannel = MethodChannel(flutterPluginBinding.binaryMessenger, FROM_DART_CHANNEL_NAME)
       fromDartChannel?.setMethodCallHandler(this)
-    }
+    // }
     thisContext = flutterPluginBinding.applicationContext
     binaryMessengerToDart = flutterPluginBinding.binaryMessenger
-    if (toDartChannel == null) {
+    // if (toDartChannel == null) {
       toDartChannel = MethodChannel(binaryMessengerToDart!!, TO_DART_CHANNEL_NAME)
       println("ULocationDriverPlugin#onAttachedToEngine toDartChannel=$toDartChannel")
-    }
+    // }
   }
 
   override fun onAttachedToActivity(binding: ActivityPluginBinding) {
