@@ -451,7 +451,9 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
         getLocationPermission()
         stopLocationUpdates()
         WorkManager.getInstance(thisContext).cancelAllWork()
-        fusedLocationClients.add(LocationServices.getFusedLocationProviderClient(thisContext.applicationContext))
+        if (fusedLocationClients.isEmpty()) {
+          fusedLocationClients.add(LocationServices.getFusedLocationProviderClient(thisContext.applicationContext))
+        }
         println("ULocationDriverPlugin#initialize fusedLocationClients.size = ${fusedLocationClients.size}")
         result.success("success")
       }
@@ -466,6 +468,10 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
           }
         }
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
+        if (fusedLocationClients.isEmpty()) {
+          fusedLocationClients.add(LocationServices.getFusedLocationProviderClient(thisContext.applicationContext))
+        }
+        println("ULocationDriverPlugin#initialize fusedLocationClients.size = ${fusedLocationClients.size}")
         getCurrentLocation(thisContext.applicationContext) // 初回の位置情報取得
         requestDeviceLocation(thisContext.applicationContext)
 
