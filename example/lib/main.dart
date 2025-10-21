@@ -6,34 +6,8 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:u_location_driver/u_location_driver.dart';
-import 'package:u_location_driver_example/send_to_host.dart';
 
 @pragma('vm:entry-point')
-Future<void> uLocationBackgroundHandler() async {
-  debugPrint("Dart: Start uLocationBackgroundHandler()");
-  WidgetsFlutterBinding.ensureInitialized();
-  try {
-    debugPrint("Dart: uLocationBackgroundHandler() -> Set Method Channel");
-    MethodChannel toDartChannelBackground = MethodChannel("com.jimdo.uchida001tmhr.u_location_driver/toDart/background");
-    debugPrint("Dart: uLocationBackgroundHandler() -> setMethodCallHandler() : toDartChannelBackground = $toDartChannelBackground");
-    toDartChannelBackground.setMethodCallHandler((call) {
-      switch (call.method) {
-        case "location":
-          SendToHost sendToHost = SendToHost();
-          sendToHost.send(call.arguments);
-          return Future.value("ACK");
-        case "readyForLocation":
-          debugPrint("toDartChannelBackground.setMethodCallHandler() -> readyForLocation");
-          return Future.value("ACK");
-        default:
-          return Future.value("NAK");
-      }
-    });
-  } catch (e, st) {
-    debugPrint("Dart: uLocationBackgroundHandler exception: $e\n$st");
-  }
-}
-
 Future<void> main() async {
   // The name must be main().
   debugPrint("Dart: main()");
@@ -65,8 +39,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     toDartChannel.setMethodCallHandler((call) {
       switch (call.method) {
         case "location":
-          SendToHost sendToHost = SendToHost();
-          sendToHost.send(call.arguments);
+          debugPrint("Dart: Received Location");
           setState(() {
             messageFromNative = call.arguments;
           });
@@ -184,7 +157,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
               ),
               TextButton(
                 onPressed: (() {
-                  final callbackHandle = PluginUtilities.getCallbackHandle(uLocationBackgroundHandler);
+                  final callbackHandle = PluginUtilities.getCallbackHandle(main);
                   if (callbackHandle != null) {
                     final handle = callbackHandle.toRawHandle();
                     uLocationDriverPlugin.activate(callbackHandle: handle);
