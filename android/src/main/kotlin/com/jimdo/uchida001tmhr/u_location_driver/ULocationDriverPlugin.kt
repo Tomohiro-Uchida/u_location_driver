@@ -239,7 +239,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
             .addOnSuccessListener { it ->
               println("ULocationDriverPlugin#getCurrentLocation#OnSuccessListener")
               when (activityState) {
-                ACTIVITY_FOREGROUND /*, ACTIVITY_BACKGROUND */ -> {
+                ACTIVITY_FOREGROUND, ACTIVITY_BACKGROUND -> {
                   println("ULocationDriverPlugin#getCurrentLocation#OnSuccessListener ACTIVITY_FOREGROUND/ACTIVITY_BACKGROUND")
                   Handler(Looper.getMainLooper()).postDelayed({
                     informLocationToDart(it, false)
