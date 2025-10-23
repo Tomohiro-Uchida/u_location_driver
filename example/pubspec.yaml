@@ -4,7 +4,7 @@ description: "Demonstrates how to use the u_location_driver plugin."
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 1.0.86+86
+version: 1.0.88+88
 
 environment:
   sdk: ^3.8.1
