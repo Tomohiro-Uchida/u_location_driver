@@ -474,6 +474,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
       permissionBackgroundLocation == PackageManager.PERMISSION_GRANTED
     ) {
       WorkManager.getInstance(thisContext).cancelAllWork()
+      startLocationUpdates()
     }
   }
 
