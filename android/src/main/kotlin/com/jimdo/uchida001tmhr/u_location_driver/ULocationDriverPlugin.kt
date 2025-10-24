@@ -95,6 +95,8 @@ class LocationWorker(val context: Context, params: WorkerParameters) : Listenabl
                   println("LocationWorker#getCurrentLocation#OnSuccessListener ACTIVITY_FOREGROUND/ACTIVITY_BACKGROUND")
                   Handler(Looper.getMainLooper()).postDelayed({
                     informLocationToDart(it, false)
+                    println("LocationWorker#completer.set(Result.success())")
+                    completer.set(Result.success())
                   }, 1000)
                 }
 
@@ -103,11 +105,12 @@ class LocationWorker(val context: Context, params: WorkerParameters) : Listenabl
                   println("LocationWorker#getCurrentLocation#OnSuccessListener else")
                   Handler(Looper.getMainLooper()).postDelayed({
                     informLocationToDart(it, true)
+                    println("LocationWorker#completer.set(Result.success())")
+                    completer.set(Result.success())
                   }, 1000)
                 }
               }
-              println("LocationWorker#completer.set(Result.success())")
-              completer.set(Result.success())
+              // completer.set(Result.success())
             }
             .addOnFailureListener { it ->
               println("LocationWorker#completer.setException()")
