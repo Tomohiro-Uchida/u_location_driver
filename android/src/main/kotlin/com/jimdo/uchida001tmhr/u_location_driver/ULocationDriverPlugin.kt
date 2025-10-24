@@ -51,7 +51,7 @@ import androidx.core.content.edit
 import com.google.common.util.concurrent.ListenableFuture
 import androidx.concurrent.futures.CallbackToFutureAdapter
 import androidx.work.ExistingPeriodicWorkPolicy
-import com.jimdo.uchida001tmhr.u_location_driver.ULocationDriverPlugin.Companion.ACTIVITY_BACKGROUND
+// import com.jimdo.uchida001tmhr.u_location_driver.ULocationDriverPlugin.Companion.ACTIVITY_BACKGROUND
 import com.jimdo.uchida001tmhr.u_location_driver.ULocationDriverPlugin.Companion.ACTIVITY_FOREGROUND
 import com.jimdo.uchida001tmhr.u_location_driver.ULocationDriverPlugin.Companion.activityState
 import com.jimdo.uchida001tmhr.u_location_driver.ULocationDriverPlugin.Companion.backgroundFlutterEngine
@@ -91,10 +91,11 @@ class LocationWorker(val context: Context, params: WorkerParameters) : Listenabl
             .addOnSuccessListener { it ->
               println("LocationWorker#getCurrentLocation#OnSuccessListener activityState = $activityState")
               when (activityState) {
-                ACTIVITY_FOREGROUND, ACTIVITY_BACKGROUND -> {
-                  println("LocationWorker#getCurrentLocation#OnSuccessListener ACTIVITY_FOREGROUND/ACTIVITY_BACKGROUND")
+                ACTIVITY_FOREGROUND /*, ACTIVITY_BACKGROUND */ -> {
+                  // println("LocationWorker#getCurrentLocation#OnSuccessListener ACTIVITY_FOREGROUND/ACTIVITY_BACKGROUND")
+                  println("LocationWorker#getCurrentLocation#OnSuccessListener ACTIVITY_FOREGROUND")
                   Handler(Looper.getMainLooper()).postDelayed({
-                    informLocationToDart(it, false)
+                    informLocationToDart(it)
                     println("LocationWorker#completer.set(Result.success())")
                     completer.set(Result.success())
                   }, 1000)
@@ -104,7 +105,7 @@ class LocationWorker(val context: Context, params: WorkerParameters) : Listenabl
                   backgroundFlutterEngine = loadFlutterEngine(context)
                   println("LocationWorker#getCurrentLocation#OnSuccessListener else")
                   Handler(Looper.getMainLooper()).postDelayed({
-                    informLocationToDart(it, true)
+                    informLocationToDart(it)
                     println("LocationWorker#completer.set(Result.success())")
                     completer.set(Result.success())
                   }, 1000)
@@ -195,9 +196,8 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
       return FlutterEngineHolder.flutterEngine
     }
 
-    fun informLocationToDart(location: Location?, toBackground: Boolean) {
+    fun informLocationToDart(location: Location?) {
       println("ULocationDriverPlugin#informLocationToDart Start location = $location")
-      println("ULocationDriverPlugin#informLocationToDart Start toBackground = $toBackground")
       println("ULocationDriverPlugin#informLocationToDart Start toDartChannel = $toDartChannel")
       val locale = Locale.JAPAN
       val dateTimeFormatter =
@@ -242,10 +242,11 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
             .addOnSuccessListener { it ->
               println("ULocationDriverPlugin#getCurrentLocation#OnSuccessListener")
               when (activityState) {
-                ACTIVITY_FOREGROUND, ACTIVITY_BACKGROUND -> {
-                  println("ULocationDriverPlugin#getCurrentLocation#OnSuccessListener ACTIVITY_FOREGROUND/ACTIVITY_BACKGROUND")
+                ACTIVITY_FOREGROUND /*, ACTIVITY_BACKGROUND */ -> {
+                  // println("ULocationDriverPlugin#getCurrentLocation#OnSuccessListener ACTIVITY_FOREGROUND/ACTIVITY_BACKGROUND")
+                  println("ULocationDriverPlugin#getCurrentLocation#OnSuccessListener ACTIVITY_FOREGROUND")
                   Handler(Looper.getMainLooper()).postDelayed({
-                    informLocationToDart(it, false)
+                    informLocationToDart(it)
                   }, 1000)
                 }
 
@@ -254,7 +255,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
                   backgroundFlutterEngine = loadFlutterEngine(context)
                   if (backgroundFlutterEngine != null) {
                     Handler(Looper.getMainLooper()).postDelayed({
-                      informLocationToDart(it, true)
+                      informLocationToDart(it)
                     }, 1000)
                   }
                 }
@@ -380,6 +381,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
         getLocationPermission()
         stopLocationUpdates()
         WorkManager.getInstance(thisContext).cancelAllWork()
+        ProcessLifecycleOwner.get().lifecycle.addObserver(this)
         if (fusedLocationClients.isEmpty()) {
           fusedLocationClients.add(LocationServices.getFusedLocationProviderClient(thisContext.applicationContext))
         }
@@ -500,11 +502,12 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
     override fun onLocationResult(locationResult: LocationResult) {
       println("ULocationDriverPlugin#onLocationResult() activityState = $activityState")
       when (activityState) {
-        ACTIVITY_FOREGROUND, ACTIVITY_BACKGROUND -> {
-          println("ULocationDriverPlugin#onLocationResult() ACTIVITY_FOREGROUND/ACTIVITY_BACKGROUND")
+        ACTIVITY_FOREGROUND /*, ACTIVITY_BACKGROUND */ -> {
+          // println("ULocationDriverPlugin#onLocationResult() ACTIVITY_FOREGROUND/ACTIVITY_BACKGROUND")
+          println("ULocationDriverPlugin#onLocationResult() ACTIVITY_FOREGROUND")
           if (locationResult.lastLocation != null) {
             Handler(Looper.getMainLooper()).postDelayed({
-              informLocationToDart(locationResult.lastLocation!!, false)
+              informLocationToDart(locationResult.lastLocation!!)
             }, 1000)
           }
         }
@@ -514,7 +517,7 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
           backgroundFlutterEngine = loadFlutterEngine(thisContext)
           if (locationResult.lastLocation != null) {
             Handler(Looper.getMainLooper()).postDelayed({
-              informLocationToDart(locationResult.lastLocation!!, true)
+              informLocationToDart(locationResult.lastLocation!!)
             }, 1000)
           }
         }
