@@ -51,7 +51,7 @@ import androidx.core.content.edit
 import com.google.common.util.concurrent.ListenableFuture
 import androidx.concurrent.futures.CallbackToFutureAdapter
 import androidx.work.ExistingPeriodicWorkPolicy
-// import com.jimdo.uchida001tmhr.u_location_driver.ULocationDriverPlugin.Companion.ACTIVITY_BACKGROUND
+import com.jimdo.uchida001tmhr.u_location_driver.ULocationDriverPlugin.Companion.ACTIVITY_BACKGROUND
 import com.jimdo.uchida001tmhr.u_location_driver.ULocationDriverPlugin.Companion.ACTIVITY_FOREGROUND
 import com.jimdo.uchida001tmhr.u_location_driver.ULocationDriverPlugin.Companion.activityState
 import com.jimdo.uchida001tmhr.u_location_driver.ULocationDriverPlugin.Companion.backgroundFlutterEngine
@@ -91,9 +91,9 @@ class LocationWorker(val context: Context, params: WorkerParameters) : Listenabl
             .addOnSuccessListener { it ->
               println("LocationWorker#getCurrentLocation#OnSuccessListener activityState = $activityState")
               when (activityState) {
-                ACTIVITY_FOREGROUND /*, ACTIVITY_BACKGROUND */ -> {
-                  // println("LocationWorker#getCurrentLocation#OnSuccessListener ACTIVITY_FOREGROUND/ACTIVITY_BACKGROUND")
-                  println("LocationWorker#getCurrentLocation#OnSuccessListener ACTIVITY_FOREGROUND")
+                ACTIVITY_FOREGROUND, ACTIVITY_BACKGROUND -> {
+                  println("LocationWorker#getCurrentLocation#OnSuccessListener ACTIVITY_FOREGROUND/ACTIVITY_BACKGROUND")
+                  // println("LocationWorker#getCurrentLocation#OnSuccessListener ACTIVITY_FOREGROUND")
                   Handler(Looper.getMainLooper()).postDelayed({
                     informLocationToDart(it)
                     println("LocationWorker#completer.set(Result.success())")
@@ -136,7 +136,6 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
 
     const val FROM_DART_CHANNEL_NAME = "com.jimdo.uchida001tmhr.u_location_driver/fromDart"
     const val TO_DART_CHANNEL_NAME = "com.jimdo.uchida001tmhr.u_location_driver/toDart"
-    const val TO_DART_CHANNEL_NAME_BACKGROUND = "com.jimdo.uchida001tmhr.u_location_driver/toDart/background"
     var fromDartChannel: MethodChannel? = null
     var toDartChannel: MethodChannel? = null
     var binaryMessengerToDart: BinaryMessenger? = null
@@ -242,9 +241,9 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
             .addOnSuccessListener { it ->
               println("ULocationDriverPlugin#getCurrentLocation#OnSuccessListener")
               when (activityState) {
-                ACTIVITY_FOREGROUND /*, ACTIVITY_BACKGROUND */ -> {
-                  // println("ULocationDriverPlugin#getCurrentLocation#OnSuccessListener ACTIVITY_FOREGROUND/ACTIVITY_BACKGROUND")
-                  println("ULocationDriverPlugin#getCurrentLocation#OnSuccessListener ACTIVITY_FOREGROUND")
+                ACTIVITY_FOREGROUND, ACTIVITY_BACKGROUND -> {
+                  println("ULocationDriverPlugin#getCurrentLocation#OnSuccessListener ACTIVITY_FOREGROUND/ACTIVITY_BACKGROUND")
+                  // println("ULocationDriverPlugin#getCurrentLocation#OnSuccessListener ACTIVITY_FOREGROUND")
                   Handler(Looper.getMainLooper()).postDelayed({
                     informLocationToDart(it)
                   }, 1000)
@@ -502,9 +501,9 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
     override fun onLocationResult(locationResult: LocationResult) {
       println("ULocationDriverPlugin#onLocationResult() activityState = $activityState")
       when (activityState) {
-        ACTIVITY_FOREGROUND /*, ACTIVITY_BACKGROUND */ -> {
-          // println("ULocationDriverPlugin#onLocationResult() ACTIVITY_FOREGROUND/ACTIVITY_BACKGROUND")
-          println("ULocationDriverPlugin#onLocationResult() ACTIVITY_FOREGROUND")
+        ACTIVITY_FOREGROUND, ACTIVITY_BACKGROUND -> {
+          println("ULocationDriverPlugin#onLocationResult() ACTIVITY_FOREGROUND/ACTIVITY_BACKGROUND")
+          // println("ULocationDriverPlugin#onLocationResult() ACTIVITY_FOREGROUND")
           if (locationResult.lastLocation != null) {
             Handler(Looper.getMainLooper()).postDelayed({
               informLocationToDart(locationResult.lastLocation!!)
