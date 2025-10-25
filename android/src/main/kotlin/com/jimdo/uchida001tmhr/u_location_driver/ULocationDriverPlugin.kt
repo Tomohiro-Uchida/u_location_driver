@@ -219,6 +219,8 @@ class ULocationDriverPlugin : FlutterPlugin, MethodCallHandler, ActivityAware, D
             println("informLocationToDart: notImplemented")
           }
         })
+      } else {
+        println("ULocationDriverPlugin#informLocationToDart location == null")
       }
     }
 
